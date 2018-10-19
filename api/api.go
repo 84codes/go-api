@@ -28,7 +28,7 @@ func (api *API) waitUntilReady(id string) (map[string]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		if data["ready"] == true {
+		if data["ready"] == true || data["ready"] == nil {
 			data["id"] = id
 			return data, nil
 		}
