@@ -7,10 +7,10 @@ func NewApi(baseUrl, apiKey string) *api.API {
 }
 
 func NewCustomerApi(baseUrl, apiKey string) *api.CustomerAPI {
-	return api.New(baseUrl, apiKey)
+	return api.NewCustomerApi(baseUrl, apiKey)
 }
 
 func NewAlarmApi(baseUrl, apiKey string) *api.AlarmAPI {
-	return api.New(baseUrl, apiKey)
+	return api.NewAlarmApi(baseUrl, apiKey)
 }
 
