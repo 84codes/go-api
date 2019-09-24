@@ -65,7 +65,7 @@ func (api *API) DeleteInstance(id string) error {
 	if err != nil {
 		return nil, err
 	}
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != 204 {
 		return fmt.Errorf("Got statuscode %d from api: %s", resp.StatusCode, resp.Status)
 	}
 	return err
