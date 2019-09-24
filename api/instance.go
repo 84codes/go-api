@@ -30,8 +30,13 @@ func (api *API) CreateInstance(params map[string]interface{}) (map[string]interf
 	if err != nil {
 		return nil, err
 	}
+
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("Got statuscode %d from api: %s", resp.StatusCode, resp.Status)
+	}
+
+	if _, ok := data["id"]; !ok {
+		fmt.Errorf("No id in response")
 	}
 	string_id := strconv.Itoa(int(data["id"].(float64)))
 	return api.waitUntilReady(string_id)
