@@ -10,11 +10,11 @@ func (api *API) waitUntilReady(id string) (map[string]interface{}, error) {
 	data := make(map[string]interface{})
 	for {
 		resp, err := api.sling.Path("/api/instances/").Get(id).ReceiveSuccess(&data)
-		if resp.StatusCode != 200 {
-			return nil, fmt.Errorf("Got statuscode %d from api: %s", resp.StatusCode, resp.Status)
-		}
 		if err != nil {
 			return nil, err
+		}
+		if resp.StatusCode != 200 {
+			return nil, fmt.Errorf("Got statuscode %d from api: %s", resp.StatusCode, resp.Status)
 		}
 		if data["ready"] == true {
 			data["id"] = id
@@ -27,11 +27,11 @@ func (api *API) waitUntilReady(id string) (map[string]interface{}, error) {
 func (api *API) CreateInstance(params map[string]interface{}) (map[string]interface{}, error) {
 	data := make(map[string]interface{})
 	resp, err := api.sling.Post("/api/instances").BodyJSON(params).ReceiveSuccess(&data)
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("Got statuscode %d from api: %s", resp.StatusCode, resp.Status)
-	}
 	if err != nil {
 		return nil, err
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Got statuscode %d from api: %s", resp.StatusCode, resp.Status)
 	}
 	string_id := strconv.Itoa(int(data["id"].(float64)))
 	return api.waitUntilReady(string_id)
@@ -40,17 +40,20 @@ func (api *API) CreateInstance(params map[string]interface{}) (map[string]interf
 func (api *API) ReadInstance(id string) (map[string]interface{}, error) {
 	data := make(map[string]interface{})
 	resp, err := api.sling.Path("/api/instances/").Get(id).ReceiveSuccess(&data)
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("Got statuscode %d from api ", resp.StatusCode)
-	}
 	if err != nil {
 		return nil, err
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Got statuscode %d from api ", resp.StatusCode)
 	}
 	return data, nil
 }
 
 func (api *API) UpdateInstance(id string, params map[string]interface{}) error {
 	resp, err := api.sling.Put("/api/instances/" + id).BodyJSON(params).ReceiveSuccess(nil)
+	if err != nil {
+		return nil, err
+	}
 	if resp.StatusCode != 200 {
 		return fmt.Errorf("Got statuscode %d from api: %s", resp.StatusCode, resp.Status)
 	}
@@ -59,6 +62,9 @@ func (api *API) UpdateInstance(id string, params map[string]interface{}) error {
 
 func (api *API) DeleteInstance(id string) error {
 	resp, err := api.sling.Path("/api/instances/").Delete(id).ReceiveSuccess(nil)
+	if err != nil {
+		return nil, err
+	}
 	if resp.StatusCode != 200 {
 		return fmt.Errorf("Got statuscode %d from api: %s", resp.StatusCode, resp.Status)
 	}
