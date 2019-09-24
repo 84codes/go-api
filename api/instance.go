@@ -49,7 +49,7 @@ func (api *API) ReadInstance(id string) (map[string]interface{}, error) {
 		return nil, err
 	}
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("Got statuscode %d from api ", resp.StatusCode)
+		return nil, fmt.Errorf("Got statuscode %d from api: %s ", resp.StatusCode, resp.Status)
 	}
 	return data, nil
 }
