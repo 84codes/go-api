@@ -36,7 +36,7 @@ func (api *API) CreateInstance(params map[string]interface{}) (map[string]interf
 	}
 
 	if _, ok := data["id"]; !ok {
-		fmt.Errorf("No id in response")
+		return nil, fmt.Errorf("No id in response")
 	}
 	string_id := strconv.Itoa(int(data["id"].(float64)))
 	return api.waitUntilReady(string_id)
@@ -68,7 +68,7 @@ func (api *API) UpdateInstance(id string, params map[string]interface{}) error {
 func (api *API) DeleteInstance(id string) error {
 	resp, err := api.sling.Path("/api/instances/").Delete(id).ReceiveSuccess(nil)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if resp.StatusCode != 204 {
 		return fmt.Errorf("Got statuscode %d from api: %s", resp.StatusCode, resp.Status)
