@@ -52,7 +52,7 @@ func (api *API) ReadInstance(id string) (map[string]interface{}, error) {
 func (api *API) UpdateInstance(id string, params map[string]interface{}) error {
 	resp, err := api.sling.Put("/api/instances/" + id).BodyJSON(params).ReceiveSuccess(nil)
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("Got statuscode %d from api ", resp.StatusCode)
+		return fmt.Errorf("Got statuscode %d from api ", resp.StatusCode)
 	}
 	return err
 }
@@ -60,7 +60,7 @@ func (api *API) UpdateInstance(id string, params map[string]interface{}) error {
 func (api *API) DeleteInstance(id string) error {
 	resp, err := api.sling.Path("/api/instances/").Delete(id).ReceiveSuccess(nil)
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("Got statuscode %d from api ", resp.StatusCode)
+		return fmt.Errorf("Got statuscode %d from api ", resp.StatusCode)
 	}
 	return err
 }
