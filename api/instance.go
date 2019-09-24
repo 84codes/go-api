@@ -8,7 +8,10 @@ import (
 func (api *API) waitUntilReady(id string) (map[string]interface{}, error) {
 	data := make(map[string]interface{})
 	for {
-		_, err := api.sling.Path("/api/instances/").Get(id).ReceiveSuccess(&data)
+		resp, err := api.sling.Path("/api/instances/").Get(id).ReceiveSuccess(&data)
+		if resp.StatusCode != 200 {
+			return nil, fmt.Errorf("Got statuscode %d from api ", resp.StatusCode)
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -22,7 +25,10 @@ func (api *API) waitUntilReady(id string) (map[string]interface{}, error) {
 
 func (api *API) CreateInstance(params map[string]interface{}) (map[string]interface{}, error) {
 	data := make(map[string]interface{})
-	_, err := api.sling.Post("/api/instances").BodyJSON(params).ReceiveSuccess(&data)
+	resp, err := api.sling.Post("/api/instances").BodyJSON(params).ReceiveSuccess(&data)
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Got statuscode %d from api ", resp.StatusCode)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +38,10 @@ func (api *API) CreateInstance(params map[string]interface{}) (map[string]interf
 
 func (api *API) ReadInstance(id string) (map[string]interface{}, error) {
 	data := make(map[string]interface{})
-	_, err := api.sling.Path("/api/instances/").Get(id).ReceiveSuccess(&data)
+	resp, err := api.sling.Path("/api/instances/").Get(id).ReceiveSuccess(&data)
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Got statuscode %d from api ", resp.StatusCode)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -40,11 +49,17 @@ func (api *API) ReadInstance(id string) (map[string]interface{}, error) {
 }
 
 func (api *API) UpdateInstance(id string, params map[string]interface{}) error {
-	_, err := api.sling.Put("/api/instances/" + id).BodyJSON(params).ReceiveSuccess(nil)
+	resp, err := api.sling.Put("/api/instances/" + id).BodyJSON(params).ReceiveSuccess(nil)
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Got statuscode %d from api ", resp.StatusCode)
+	}
 	return err
 }
 
 func (api *API) DeleteInstance(id string) error {
-	_, err := api.sling.Path("/api/instances/").Delete(id).ReceiveSuccess(nil)
+	resp, err := api.sling.Path("/api/instances/").Delete(id).ReceiveSuccess(nil)
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Got statuscode %d from api ", resp.StatusCode)
+	}
 	return err
 }
