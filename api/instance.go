@@ -57,7 +57,7 @@ func (api *API) ReadInstance(id string) (map[string]interface{}, error) {
 func (api *API) UpdateInstance(id string, params map[string]interface{}) error {
 	resp, err := api.sling.Put("/api/instances/" + id).BodyJSON(params).ReceiveSuccess(nil)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if resp.StatusCode != 200 {
 		return fmt.Errorf("Got statuscode %d from api: %s", resp.StatusCode, resp.Status)
