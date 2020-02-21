@@ -8,4 +8,4 @@ build:
 	go build -ldflags "-X 'go/src/github.com/84codes/go-api/api.version=$(version)'" -o go-api_v$(version)
 
 install:
-	go install -ldflags "-X 'go/src/github.com/84codes/go-api/api.version=$(version)'" -o go-api_v$(version)
+	go install -ldflags "-X 'go/src/github.com/84codes/go-api/api.version=$(version)'"
