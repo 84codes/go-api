@@ -1,5 +1,32 @@
 # Changelog for go-api
 
+## 1.2.0 (Feb 27, 2020)
+
+NOTES:
+
+* Changes to underlying API
+
+IMPROVEMENTS:
+
+* api/notifications.go - Updated to handle changes to API
+* api/alarm.go - Updated to handle changes to API
+
+## 1.1.2 (Feb 18, 2020)
+
+BUG FIXES:
+
+* api/credentials.go - Url regex expression to handle both amqp and amqps
+
+## 1.1.1 (Feb 15, 2020)
+
+IMPROVEMENTS:
+
+* api/notification.go - Function to retrieve all recipients
+
+BUG FIXES:
+
+* api/instance.go - Url regex expression to handle both amqp and amqps
+
 ## 1.1.0 (Dec 13, 2019)
 
 NOTES:
