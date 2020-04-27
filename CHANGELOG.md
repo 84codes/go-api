@@ -1,5 +1,12 @@
 # Changelog for go-api
 
+## 1.3.0 (Apr, 27, 2020)
+
+IMPROVEMENTS:
+
+* api/integration.go - Added combined log and metric integration API calls
+* api/alarms.go - Updated wait function for alarm deletion
+
 ## 1.2.0 (Feb 27, 2020)
 
 NOTES:
