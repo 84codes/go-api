@@ -1,4 +1,15 @@
-# Changelog for go-api
+## 1.3.2 (Jun, 05, 2020)
+
+IMPREVEMENTS:
+
+* lint: name convention
+* api/plugin.go - Added delete function. Missmatch when deleting instance.
+
+## 1.3.1 (Apr, 29, 2020)
+
+IMPROVEMENTS:
+
+* api/nodes.go - Added API call to retrieve node information
 
 ## 1.3.0 (Apr, 27, 2020)
 
