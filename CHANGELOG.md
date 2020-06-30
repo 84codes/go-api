@@ -1,6 +1,12 @@
+## 1.3.3 (Jun 30, 2020)
+
+IMPROVEMENTS:
+
+* api/security_firewall.go - Added wait func for create, update and delete of rules. In order for cache delay to finish.
+
 ## 1.3.2 (Jun, 05, 2020)
 
-IMPREVEMENTS:
+IMPROVEMENTS:
 
 * lint: name convention
 * api/plugin.go - Added delete function. Missmatch when deleting instance.
