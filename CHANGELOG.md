@@ -1,3 +1,17 @@
+## 1.3.4 (Nov 12, 2020)
+
+NOTES:
+
+* Webhook added already Oct 6, but no release until Nov 12.
+
+FEATURES:
+
+* api/webhook.go - Added webhook implementation against CloudAMQP API.
+
+IMPROVEMENTS:
+
+* api/instance.go - Wait on nodes to fully be configured and running when doing up/downgrades and updating instance.
+
 ## 1.3.3 (Jun 30, 2020)
 
 IMPROVEMENTS:
