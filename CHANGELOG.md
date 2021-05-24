@@ -1,3 +1,9 @@
+## Unreleased
+
+IMPROVEMENTS:
+
+* api/security_firewall.go - Include `HTTPS` service in default rules. [#9](https://github.com/84codes/go-api/pull/9)
+
 ## 1.3.4 (Nov 12, 2020)
 
 NOTES:
