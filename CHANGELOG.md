@@ -1,10 +1,18 @@
+## 1.4.1 (Unreleased)
+
+IMPROVEMENTS:
+
+* api/plugins_community.go - Added multiple retry functionallity when fetching communit plugin information
+* api/instance.go - Updated iteration loop to determine if all nodes are configured
+* api/instance.go - Updated endpoint to calculate number of nodes
+
 ## 1.4.0 (Sep 20, 2021)
 
 IMPROVEMENTS:
 
 * api/security_firewall.go - Include `HTTPS` service in default rules. [#9](https://github.com/84codes/go-api/pull/9)
-* api/vpc_peering.go - Added multiple retry functionallity to fetching vpc information
-* api/plugins.go - Added multiple retry functionallity to fetching plugin information
+* api/vpc_peering.go - Added multiple retry functionallity when fetching vpc information
+* api/plugins.go - Added multiple retry functionallity when fetching plugin information
 * Merged pull request [#13](https://github.com/84codes/go-api/pull/13) to fix spelling
 
 ## 1.3.4 (Nov 12, 2020)
