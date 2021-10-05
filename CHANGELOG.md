@@ -1,4 +1,9 @@
-## 1.4.1 (Unreleased)
+## 1.5.0 (Oct 05, 2021)
+
+FEATURES:
+
+* api/account.go - Added account support, to be able to list all instances for an account
+* api/custom_domain.go - Added custom domain support
 
 IMPROVEMENTS:
 
