@@ -7,7 +7,7 @@ FEATURES:
 
 IMPROVEMENTS:
 
-* api/plugins_community.go - Added multiple retry functionallity when fetching communit plugin information
+* api/plugins_community.go - Added multiple retry functionality when fetching community plugin information
 * api/instance.go - Updated iteration loop to determine if all nodes are configured
 * api/instance.go - Updated endpoint to calculate number of nodes
 
