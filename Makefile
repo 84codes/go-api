@@ -1,5 +1,5 @@
 ## go-api provider version
-version = 1.5.0
+version = 1.5.2
 
 clean:
 	## remove previous installed go-api

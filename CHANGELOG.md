@@ -1,3 +1,7 @@
+## 1.5.2 (Nov 17, 2021)
+
+* api/security_firewall.go - Include `STREAM`, `STREAM_SSL` services in default rules. [#9](https://github.com/84codes/go-api/pull/16)
+
 ## 1.5.1 (Oct 05, 2021)
 
 NOTES:
