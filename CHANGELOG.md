@@ -1,3 +1,7 @@
+## 1.5.3 (Dec 16, 2021)
+
+* api/vpc_gcp_peering.go - Added VPC peering and info for Google Cloud Platform.
+
 ## 1.5.2 (Nov 17, 2021)
 
 * api/security_firewall.go - Include `STREAM`, `STREAM_SSL` services in default rules. [#9](https://github.com/84codes/go-api/pull/16)
