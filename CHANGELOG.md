@@ -1,6 +1,6 @@
-## 1.5.3 (Dec 16, 2021)
+## 1.5.3 (Dec 20, 2021)
 
-* api/vpc_gcp_peering.go - Added VPC peering and info for Google Cloud Platform.
+* api/vpc_gcp_peering.go - Added VPC peering and info for Google Cloud Platform. [#17](https://github.com/84codes/go-api/pull/17)
 
 ## 1.5.2 (Nov 17, 2021)
 
