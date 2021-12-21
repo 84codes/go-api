@@ -1,3 +1,7 @@
+## 1.5.4 (Dec 21, 2021)
+
+* api/security_firewall.go - Added multiple retryß functionality for create and update firewall rules
+
 ## 1.5.3 (Dec 20, 2021)
 
 * api/vpc_gcp_peering.go - Added VPC peering and info for Google Cloud Platform. [#17](https://github.com/84codes/go-api/pull/17)
