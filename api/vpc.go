@@ -5,7 +5,49 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"time"
 )
+
+func (api *API) waitUntilVpcReady(vpcID string) error {
+	log.Printf("[DEBUG] go-api::vpc::waitUntilVpcReady waiting")
+	data := make(map[string]interface{})
+	failed := make(map[string]interface{})
+	for {
+		path := fmt.Sprintf("api/vpcs/%s/vpc-peering/info", vpcID)
+		response, err := api.sling.New().Get(path).Receive(&data, &failed)
+
+		if err != nil {
+			return err
+		}
+		if response.StatusCode == 400 {
+			log.Printf("[WARN] go-api::vpc::waitUntilVpcReady status: %v, message: %s", response.StatusCode, failed)
+		} else if response.StatusCode != 200 {
+			return fmt.Errorf("waitUntilReady failed, status: %v, message: %s", response.StatusCode, failed)
+		} else if response.StatusCode == 200 {
+			// log.Printf("[DEBUG] go-api::vpc::waitUntilVpcReady data: %v", data)
+			// data["id"] = vpcID
+			// return data, nil
+			return nil
+		}
+
+		time.Sleep(10 * time.Second)
+	}
+}
+
+func (api *API) readVpcName(vpcID string) (map[string]interface{}, error) {
+	data := make(map[string]interface{})
+	failed := make(map[string]interface{})
+	path := fmt.Sprintf("api/vpcs/%s/vpc-peering/info", vpcID)
+	response, err := api.sling.New().Get(path).Receive(&data, &failed)
+
+	if err != nil {
+		return nil, err
+	}
+	if response.StatusCode != 200 {
+		return nil, fmt.Errorf("readVpcName failed, status: %v, message: %s", response.StatusCode, failed)
+	}
+	return data, nil
+}
 
 func (api *API) CreateVpcInstance(params map[string]interface{}) (map[string]interface{}, error) {
 	data := make(map[string]interface{})
@@ -29,15 +71,17 @@ func (api *API) CreateVpcInstance(params map[string]interface{}) (map[string]int
 		return nil, errors.New(msg)
 	}
 
+	//return api.waitUntilVpcReady(data["id"].(string))
+	api.waitUntilVpcReady(data["id"].(string))
 	return data, nil
 }
 
-func (api *API) ReadVpcInstance(instanceID string) (map[string]interface{}, error) {
+func (api *API) ReadVpcInstance(vpcID string) (map[string]interface{}, error) {
 	data := make(map[string]interface{})
 	failed := make(map[string]interface{})
-	log.Printf("[DEBUG] go-api::vpc::read instance ID: %s", instanceID)
+	log.Printf("[DEBUG] go-api::vpc::read vpc ID: %s", vpcID)
 
-	path := fmt.Sprintf("/api/vpcs/%s", instanceID)
+	path := fmt.Sprintf("/api/vpcs/%s", vpcID)
 	response, err := api.sling.New().Path(path).Receive(&data, &failed)
 	log.Printf("[DEBUG] go-api::vpc::read data: %v", data)
 
@@ -48,13 +92,15 @@ func (api *API) ReadVpcInstance(instanceID string) (map[string]interface{}, erro
 		return nil, fmt.Errorf("ReadVpcInstance failed, status: %v, message: %v", response.StatusCode, failed)
 	}
 
+	data_temp, _ := api.readVpcName(vpcID)
+	data["vpc_name"] = data_temp["name"]
 	return data, nil
 }
 
-func (api *API) UpdateVpcInstance(instanceID string, params map[string]interface{}) error {
+func (api *API) UpdateVpcInstance(vpcID string, params map[string]interface{}) error {
 	failed := make(map[string]interface{})
-	log.Printf("[DEBUG] go-api::instance::update instance ID: %s, params: %v", instanceID, params)
-	path := fmt.Sprintf("api/vpcs/%s", instanceID)
+	log.Printf("[DEBUG] go-api::instance::update vpc ID: %s, params: %v", vpcID, params)
+	path := fmt.Sprintf("api/vpcs/%s", vpcID)
 	response, err := api.sling.New().Put(path).BodyJSON(params).Receive(nil, &failed)
 
 	if err != nil {
@@ -64,13 +110,14 @@ func (api *API) UpdateVpcInstance(instanceID string, params map[string]interface
 		return fmt.Errorf("UpdateInstance failed, status: %v, message: %v", response.StatusCode, failed)
 	}
 
-	return api.waitUntilAllNodesReady(instanceID)
+	return nil
 }
 
-func (api *API) DeleteVpcInstance(instanceID string) error {
+func (api *API) DeleteVpcInstance(vpcID string) error {
 	failed := make(map[string]interface{})
-	log.Printf("[DEBUG] go-api::vpc::delete instance ID: %s", instanceID)
-	response, err := api.sling.New().Path("/api/vpcs/").Delete(instanceID).Receive(nil, &failed)
+	log.Printf("[DEBUG] go-api::vpc::delete vpc ID: %s", vpcID)
+	path := fmt.Sprintf("api/vpcs/%s", vpcID)
+	response, err := api.sling.New().Delete(path).Receive(nil, &failed)
 
 	if err != nil {
 		return err

@@ -1,6 +1,19 @@
+## 1.6.0 (not released)
+
+NOTES:
+
+* Managed standalone VPCS
+* Temporary functions to change identifier and endpoint used for peerin
+
+FEATURES:
+
+* api/vpc.go - Added support for managed standalone VPCs
+* api/vpc_gcp_peering_temp.go - Added temporary functions for GCP peering
+* api/vpc_peering_temp.go - Added temporary functions for AWS peering
+
 ## 1.5.4 (Dec 21, 2021)
 
-* api/security_firewall.go - Added multiple retryß functionality for create and update firewall rules
+* api/security_firewall.go - Added multiple retry functionality for create and update firewall rules
 
 ## 1.5.3 (Dec 20, 2021)
 
