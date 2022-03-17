@@ -2,14 +2,18 @@
 
 NOTES:
 
-* Managed standalone VPCS
-* Temporary functions to change identifier and endpoint used for peerin
+* Managed standalone VPCs
+* Temporary functions to change identifier and endpoint for vpc peering
 
 FEATURES:
 
 * api/vpc.go - Added support for managed standalone VPCs
 * api/vpc_gcp_peering_temp.go - Added temporary functions for GCP peering
 * api/vpc_peering_temp.go - Added temporary functions for AWS peering
+
+IMPROVEMENTS:
+
+* api/instances.go - Added keep_vpc paramater to keep vpc when deleting instance
 
 ## 1.5.4 (Dec 21, 2021)
 

@@ -24,9 +24,6 @@ func (api *API) waitUntilVpcReady(vpcID string) error {
 		} else if response.StatusCode != 200 {
 			return fmt.Errorf("waitUntilReady failed, status: %v, message: %s", response.StatusCode, failed)
 		} else if response.StatusCode == 200 {
-			// log.Printf("[DEBUG] go-api::vpc::waitUntilVpcReady data: %v", data)
-			// data["id"] = vpcID
-			// return data, nil
 			return nil
 		}
 
@@ -71,7 +68,6 @@ func (api *API) CreateVpcInstance(params map[string]interface{}) (map[string]int
 		return nil, errors.New(msg)
 	}
 
-	//return api.waitUntilVpcReady(data["id"].(string))
 	api.waitUntilVpcReady(data["id"].(string))
 	return data, nil
 }

@@ -6,7 +6,6 @@ import (
 	"strconv"
 )
 
-// ReadAccount - read out node information of the cluster
 func (api *API) ListInstances() ([]map[string]interface{}, error) {
 	var data []map[string]interface{}
 	failed := make(map[string]interface{})
@@ -35,11 +34,12 @@ func (api *API) ListVpcs() ([]map[string]interface{}, error) {
 	if response.StatusCode != 200 {
 		return nil, fmt.Errorf("ListVpcs failed, status: %v, message: %v", response.StatusCode, failed)
 	}
-	// Todo: Iterate over instances to get vpcs name
+
 	for k, _ := range data {
 		vpcID := strconv.FormatFloat(data[k]["id"].(float64), 'f', 0, 64)
 		data_temp, _ := api.readVpcName(vpcID)
 		data[k]["vpc_name"] = data_temp["name"]
 	}
+
 	return data, nil
 }
