@@ -2,9 +2,9 @@
 
 FEATURES:
 
-* api/vpc.go - Added new endpoints for standalone VPC request
-* api/vpc_gcp_peering_withvpcid.go - Added new endpoints for GCP peering using VPC identifier
-* api/vpc_peering_withvpcid.go - Added new endpoints for AWS peering using VPC identifier
+* api/vpc.go - Added new endpoints for standalone VPC request [#18](https://github.com/84codes/go-api/pull/18)
+* api/vpc_gcp_peering_withvpcid.go - Added new endpoints for GCP peering using VPC identifier [#18](https://github.com/84codes/go-api/pull/18)
+* api/vpc_peering_withvpcid.go - Added new endpoints for AWS peering using VPC identifier [#18](https://github.com/84codes/go-api/pull/18)
 * api/rabbit_configuration.go - Added new endpoints for RabbitMQ configuration
 
 IMPROVEMENTS:
