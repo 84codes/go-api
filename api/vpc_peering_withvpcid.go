@@ -1,7 +1,6 @@
 package api
 
-// Temporary functions between versions in order to change managed VPC peering.
-// Instead of using instanceID as identifier, use managed vpcID as identifier.
+// VPC peering for AWS, using vpcID as identifier.
 
 import (
 	"fmt"
@@ -10,8 +9,8 @@ import (
 	"time"
 )
 
-func (api *API) waitForPeeringStatusTemp(vpcID, peeringID string) (map[string]interface{}, error) {
-	log.Printf("[DEBUG] go-api::vpc_peering_temp::waitForPeeringStatus instance id: %s, peering id: %s", vpcID, peeringID)
+func (api *API) waitForPeeringStatusWithVpcId(vpcID, peeringID string) (map[string]interface{}, error) {
+	log.Printf("[DEBUG] go-api::vpc_peering_withvpcid::waitForPeeringStatus instance id: %s, peering id: %s", vpcID, peeringID)
 	data := make(map[string]interface{})
 	failed := make(map[string]interface{})
 	for {
@@ -32,34 +31,34 @@ func (api *API) waitForPeeringStatusTemp(vpcID, peeringID string) (map[string]in
 	}
 }
 
-func (api *API) ReadVpcInfoTemp(vpcID string) (map[string]interface{}, error) {
+func (api *API) ReadVpcInfoWithVpcId(vpcID string) (map[string]interface{}, error) {
 	// Initiale values, 5 attempts and 20 second sleep
-	return api.readVpcInfoWithRetryTemp(vpcID, 5, 20)
+	return api.readVpcInfoWithRetryWithVpcId(vpcID, 5, 20)
 }
 
-func (api *API) readVpcInfoWithRetryTemp(vpcID string, attempts, sleep int) (map[string]interface{}, error) {
+func (api *API) readVpcInfoWithRetryWithVpcId(vpcID string, attempts, sleep int) (map[string]interface{}, error) {
 	data := make(map[string]interface{})
 	failed := make(map[string]interface{})
-	log.Printf("[DEBUG] go-api::vpc_peering_temp::info vpc id: %s", vpcID)
+	log.Printf("[DEBUG] go-api::vpc_peering_withvpcid::info vpc id: %s", vpcID)
 	path := fmt.Sprintf("/api/vpcs/%s/vpc-peering/info", vpcID)
 	response, err := api.sling.New().Get(path).Receive(&data, &failed)
-	log.Printf("[DEBUG] go-api::vpc_peering_temp::info data: %v", data)
+	log.Printf("[DEBUG] go-api::vpc_peering_withvpcid::info data: %v", data)
 
 	if err != nil {
 		return nil, err
 	}
 
 	statusCode := response.StatusCode
-	log.Printf("[DEBUG] go-api::vpc_peering_temp::info statusCode: %d", statusCode)
+	log.Printf("[DEBUG] go-api::vpc_peering_withvpcid::info statusCode: %d", statusCode)
 	switch {
 	case statusCode == 400:
 		// Todo: Implement error code to be checked instead. To avoid using string comparison.
 		if strings.Compare(failed["error"].(string), "Timeout talking to backend") == 0 {
 			if attempts--; attempts > 0 {
-				log.Printf("[INFO] go-api::vpc_peering_temp::info Timeout talking to backend "+
+				log.Printf("[INFO] go-api::vpc_peering_withvpcid::info Timeout talking to backend "+
 					"attempts left %d and retry in %d seconds", attempts, sleep)
 				time.Sleep(time.Duration(sleep) * time.Second)
-				return api.readVpcInfoWithRetryTemp(vpcID, attempts, 2*sleep)
+				return api.readVpcInfoWithRetryWithVpcId(vpcID, attempts, 2*sleep)
 			} else {
 				return nil, fmt.Errorf("ReadInfo failed, status: %v, message: %s", response.StatusCode, failed)
 			}
@@ -68,13 +67,13 @@ func (api *API) readVpcInfoWithRetryTemp(vpcID string, attempts, sleep int) (map
 	return data, nil
 }
 
-func (api *API) ReadVpcPeeringRequestTemp(vpcID, peeringID string) (map[string]interface{}, error) {
+func (api *API) ReadVpcPeeringRequestWithVpcId(vpcID, peeringID string) (map[string]interface{}, error) {
 	data := make(map[string]interface{})
 	failed := make(map[string]interface{})
-	log.Printf("[DEBUG] go-api::vpc_peering_temp::request vpc id: %v, peering id: %v", vpcID, peeringID)
+	log.Printf("[DEBUG] go-api::vpc_peering_withvpcid::request vpc id: %v, peering id: %v", vpcID, peeringID)
 	path := fmt.Sprintf("/api/vpcs/%s/vpc-peering/request/%s", vpcID, peeringID)
 	response, err := api.sling.New().Get(path).Receive(&data, &failed)
-	log.Printf("[DEBUG] go-api::vpc_peering_temp::request data: %v", data)
+	log.Printf("[DEBUG] go-api::vpc_peering_withvpcid::request data: %v", data)
 
 	if err != nil {
 		return nil, err
@@ -86,29 +85,29 @@ func (api *API) ReadVpcPeeringRequestTemp(vpcID, peeringID string) (map[string]i
 	return data, nil
 }
 
-func (api *API) AcceptVpcPeeringTemp(vpcID, peeringID string) (map[string]interface{}, error) {
-	_, err := api.waitForPeeringStatusTemp(vpcID, peeringID)
+func (api *API) AcceptVpcPeeringWithVpcId(vpcID, peeringID string) (map[string]interface{}, error) {
+	_, err := api.waitForPeeringStatusWithVpcId(vpcID, peeringID)
 
 	data := make(map[string]interface{})
 	failed := make(map[string]interface{})
-	log.Printf("[DEBUG] go-api::vpc_peering_temp::accept vpc id: %s, peering id: %s", vpcID, peeringID)
+	log.Printf("[DEBUG] go-api::vpc_peering_withvpcid::accept vpc id: %s, peering id: %s", vpcID, peeringID)
 	path := fmt.Sprintf("/api/vpcs/%s/vpc-peering/request/%s", vpcID, peeringID)
 	response, err := api.sling.New().Put(path).Receive(&data, &failed)
-	log.Printf("[DEBUG] go-api::vpc_peering::accept data: %v", data)
+	log.Printf("[DEBUG] go-api::vpc_peering_withvpcid::accept data: %v", data)
 
 	if err != nil {
 		return nil, err
 	}
 	if response.StatusCode != 200 {
-		return nil, fmt.Errorf("AcceptVpcPeeringTemp failed, status: %v, message: %s", response.StatusCode, failed)
+		return nil, fmt.Errorf("AcceptVpcPeering failed, status: %v, message: %s", response.StatusCode, failed)
 	}
 
 	return data, nil
 }
 
-func (api *API) RemoveVpcPeeringTemp(vpcID, peeringID string) error {
+func (api *API) RemoveVpcPeeringWithVpcId(vpcID, peeringID string) error {
 	failed := make(map[string]interface{})
-	log.Printf("[DEBUG] go-api::vpc_peering_temp::remove vpc id: %s, peering id: %s", vpcID, peeringID)
+	log.Printf("[DEBUG] go-api::vpc_peering_withvpcid::remove vpc id: %s, peering id: %s", vpcID, peeringID)
 	path := fmt.Sprintf("/api/vpcs/%s/vpc-peering/%s", vpcID, peeringID)
 	response, err := api.sling.New().Delete(path).Receive(nil, &failed)
 

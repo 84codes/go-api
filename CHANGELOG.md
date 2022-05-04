@@ -3,13 +3,13 @@
 NOTES:
 
 * Managed standalone VPCs
-* Temporary functions to change identifier and endpoint for vpc peering
+* New VPC peering functions using VPC identifier
 
 FEATURES:
 
 * api/vpc.go - Added support for managed standalone VPCs
-* api/vpc_gcp_peering_temp.go - Added temporary functions for GCP peering
-* api/vpc_peering_temp.go - Added temporary functions for AWS peering
+* api/vpc_gcp_peering_withvpcid.go - Added new functions for GCP peering using VPC identifier
+* api/vpc_peering_withvpcid.go - Added new functions for AWS peering using VPC identifier
 
 IMPROVEMENTS:
 
