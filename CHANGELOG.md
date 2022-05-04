@@ -1,6 +1,23 @@
+## 1.6.0 (not released)
+
+NOTES:
+
+* Managed standalone VPCs
+* New VPC peering functions using VPC identifier
+
+FEATURES:
+
+* api/vpc.go - Added support for managed standalone VPCs
+* api/vpc_gcp_peering_withvpcid.go - Added new functions for GCP peering using VPC identifier
+* api/vpc_peering_withvpcid.go - Added new functions for AWS peering using VPC identifier
+
+IMPROVEMENTS:
+
+* api/instances.go - Added keep_vpc paramater to keep vpc when deleting instance
+
 ## 1.5.4 (Dec 21, 2021)
 
-* api/security_firewall.go - Added multiple retryß functionality for create and update firewall rules
+* api/security_firewall.go - Added multiple retry functionality for create and update firewall rules
 
 ## 1.5.3 (Dec 20, 2021)
 
