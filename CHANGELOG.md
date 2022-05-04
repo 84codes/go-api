@@ -1,4 +1,4 @@
-## 1.6.0 (not released)
+## 1.6.0 (May 04, 2022)
 
 NOTES:
 
@@ -14,6 +14,7 @@ FEATURES:
 IMPROVEMENTS:
 
 * api/instances.go - Added keep_vpc paramater to keep vpc when deleting instance
+* all peerings - Changed sleep time to start waiting before requesting peering status
 
 ## 1.5.4 (Dec 21, 2021)
 
