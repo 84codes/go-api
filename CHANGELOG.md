@@ -1,15 +1,11 @@
 ## 1.6.0 (May 04, 2022)
 
-NOTES:
-
-* Managed standalone VPCs
-* New VPC peering functions using VPC identifier
-
 FEATURES:
 
-* api/vpc.go - Added support for managed standalone VPCs
-* api/vpc_gcp_peering_withvpcid.go - Added new functions for GCP peering using VPC identifier
-* api/vpc_peering_withvpcid.go - Added new functions for AWS peering using VPC identifier
+* api/vpc.go - Added new endpoints for standalone VPC request
+* api/vpc_gcp_peering_withvpcid.go - Added new endpoints for GCP peering using VPC identifier
+* api/vpc_peering_withvpcid.go - Added new endpoints for AWS peering using VPC identifier
+* api/rabbit_configuration.go - Added new endpoints for RabbitMQ configuration
 
 IMPROVEMENTS:
 
