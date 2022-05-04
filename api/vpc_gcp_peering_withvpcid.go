@@ -11,6 +11,7 @@ import (
 
 func (api *API) waitForGcpPeeringStatusWithVpcId(vpcID, peerID string) error {
 	for {
+		time.Sleep(10 * time.Second)
 		data, err := api.ReadVpcGcpPeeringWithVpcId(vpcID, peerID)
 		if err != nil {
 			return err
@@ -26,7 +27,6 @@ func (api *API) waitForGcpPeeringStatusWithVpcId(vpcID, peerID string) error {
 					return nil
 				}
 			}
-			time.Sleep(10 * time.Second)
 		}
 	}
 }
