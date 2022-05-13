@@ -1,8 +1,9 @@
-## 1.7.0 (Unreleashed)
+## 1.7.0 (May 13, 2022)
 
 FEATURES:
 
 * api/upgrade_rabbitmq.go - Added new endpoints to retrieve and upgrade RabbitMQ and Erlang versions [#19](https://github.com/84codes/go-api/pull/19)
+* api/nodes.go - Added invoke action for the node (e.g. start/stop/restart RabbitMQ)
 
 ## 1.6.0 (May 04, 2022)
 
