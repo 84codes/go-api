@@ -38,10 +38,10 @@ func (api *API) UpgradeRabbitMQ(instanceID int) (string, error) {
 		return "", fmt.Errorf("Upgrade RabbitMQ failed, status: %v, message: %s", response.StatusCode, failed)
 	}
 
-	return api.waitUntilUpgrade(instanceID)
+	return api.waitUntilUpgraded(instanceID)
 }
 
-func (api *API) waitUntilUpgrade(instanceID int) (string, error) {
+func (api *API) waitUntilUpgraded(instanceID int) (string, error) {
 	var data []map[string]interface{}
 	failed := make(map[string]interface{})
 
@@ -50,18 +50,18 @@ func (api *API) waitUntilUpgrade(instanceID int) (string, error) {
 		path := fmt.Sprintf("api/instances/%v/nodes", instanceID)
 		_, err := api.sling.New().Path(path).Receive(&data, &failed)
 		if err != nil {
-			log.Printf("[ERROR] go-api::upgrade_rabbitmq::waitUntilUpgrade error: %v", err)
+			log.Printf("[ERROR] go-api::upgrade_rabbitmq::waitUntilUpgraded error: %v", err)
 			return "", err
 		}
-		log.Printf("[DEBUG] go-api::upgrade_rabbitmq::waitUntilUpgrade numberOfNodes: %v", len(data))
-		log.Printf("[DEBUG] go-api::upgrade_rabbitmq::waitUntilUpgrade data: %v", data)
+		log.Printf("[DEBUG] go-api::upgrade_rabbitmq::waitUntilUpgraded numberOfNodes: %v", len(data))
+		log.Printf("[DEBUG] go-api::upgrade_rabbitmq::waitUntilUpgraded data: %v", data)
 		ready := true
 		for _, node := range data {
-			log.Printf("[DEBUG] go-api::upgrade_rabbitmq::waitUntilUpgrade ready: %v, configured: %v",
+			log.Printf("[DEBUG] go-api::upgrade_rabbitmq::waitUntilUpgraded ready: %v, configured: %v",
 				ready, node["configured"])
 			ready = ready && node["configured"].(bool)
 		}
-		log.Printf("[DEBUG] go-api::upgrade_rabbitmq::waitUntilUpgrade ready: %v", ready)
+		log.Printf("[DEBUG] go-api::upgrade_rabbitmq::waitUntilUpgraded ready: %v", ready)
 		if ready {
 			return "", nil
 		}
