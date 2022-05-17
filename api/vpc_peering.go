@@ -15,6 +15,7 @@ func (api *API) waitForPeeringStatus(instanceID int, peeringID string) (map[stri
 		time.Sleep(10 * time.Second)
 		path := fmt.Sprintf("/api/instances/%v/vpc-peering/status/%v", instanceID, peeringID)
 		response, err := api.sling.New().Path(path).Receive(&data, &failed)
+		log.Printf("[DEBUG] go-api::vpc_peering::waitForPeeringStatus  response: %v, data: %v, failed: %v", response, data, failed)
 
 		if err != nil {
 			return nil, err
@@ -82,24 +83,39 @@ func (api *API) ReadVpcPeeringRequest(instanceID int, peeringID string) (map[str
 	return data, nil
 }
 
-func (api *API) AcceptVpcPeering(instanceID int, peeringID string) (map[string]interface{}, error) {
-	_, err := api.waitForPeeringStatus(instanceID, peeringID)
-
+func (api *API) retryAcceptVpcPeering(instanceID int, peeringID string, attempt, sleep, timeout int) (map[string]interface{}, error) {
 	data := make(map[string]interface{})
 	failed := make(map[string]interface{})
-	log.Printf("[DEBUG] go-api::vpc_peering::accept instance id: %v, peering id: %v", instanceID, peeringID)
 	path := fmt.Sprintf("/api/instances/%v/vpc-peering/request/%v", instanceID, peeringID)
 	response, err := api.sling.New().Put(path).Receive(&data, &failed)
-	log.Printf("[DEBUG] go-api::vpc_peering::accept data: %v", data)
 
 	if err != nil {
 		return nil, err
 	}
-	if response.StatusCode != 200 {
+	if attempt*sleep >= timeout {
+		return nil, fmt.Errorf("AcceptVpcPeering failed, reach timeout")
+	} else if response.StatusCode == 400 {
+		errorCode := failed["error_code"].(float64)
+		if errorCode == 40001 {
+			log.Printf("[DEBUG] go-api::vpc_peering::accept firewall not finished configuring will retry "+
+				"accept VPC peering, attempt: %d, until timeout: %d", attempt, (timeout - (attempt * sleep)))
+			attempt++
+			time.Sleep(time.Duration(sleep) * time.Second)
+			return api.retryAcceptVpcPeering(instanceID, peeringID, attempt, sleep, timeout)
+		}
+	} else if response.StatusCode != 200 {
 		return nil, fmt.Errorf("AcceptVpcPeering failed, status: %v, message: %s", response.StatusCode, failed)
 	}
-
 	return data, nil
+}
+
+func (api *API) AcceptVpcPeering(instanceID int, peeringID string, sleep, timeout int) (map[string]interface{}, error) {
+	_, err := api.waitForPeeringStatus(instanceID, peeringID)
+	if err != nil {
+		return nil, err
+	}
+	data, err := api.retryAcceptVpcPeering(instanceID, peeringID, 1, sleep, timeout)
+	return data, err
 }
 
 func (api *API) RemoveVpcPeering(instanceID int, peeringID string) error {
