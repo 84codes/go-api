@@ -102,6 +102,7 @@ func (api *API) retryAcceptVpcPeering(instanceID int, peeringID string, attempt,
 			time.Sleep(time.Duration(sleep) * time.Second)
 			return api.retryAcceptVpcPeering(instanceID, peeringID, attempt, sleep, timeout)
 		}
+		return nil, fmt.Errorf("AcceptVpcPeering failed, status: %v, message: %s", response.StatusCode, failed)
 	} else if response.StatusCode != 200 {
 		return nil, fmt.Errorf("AcceptVpcPeering failed, status: %v, message: %s", response.StatusCode, failed)
 	}
