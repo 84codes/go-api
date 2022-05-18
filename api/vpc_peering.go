@@ -93,7 +93,7 @@ func (api *API) retryAcceptVpcPeering(instanceID int, peeringID string, attempt,
 		return nil, err
 	}
 	if attempt*sleep >= timeout {
-		return nil, fmt.Errorf("AcceptVpcPeering failed, reach timeout")
+		return nil, fmt.Errorf("AcceptVpcPeering failed, reached timeout of %d seconds", timeout)
 	} else if response.StatusCode == 400 {
 		errorCode := failed["error_code"].(float64)
 		if errorCode == 40001 {
