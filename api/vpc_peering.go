@@ -57,9 +57,8 @@ func (api *API) readVpcInfoWithRetry(instanceID, attempts, sleep int) (map[strin
 					"attempts left %d and retry in %d seconds", attempts, sleep)
 				time.Sleep(time.Duration(sleep) * time.Second)
 				return api.readVpcInfoWithRetry(instanceID, attempts, 2*sleep)
-			} else {
-				return nil, fmt.Errorf("ReadInfo failed, status: %v, message: %s", response.StatusCode, failed)
 			}
+			return nil, fmt.Errorf("ReadInfo failed, status: %v, message: %s", response.StatusCode, failed)
 		}
 	}
 	return data, nil
@@ -114,8 +113,7 @@ func (api *API) AcceptVpcPeering(instanceID int, peeringID string, sleep, timeou
 	if err != nil {
 		return nil, err
 	}
-	data, err := api.retryAcceptVpcPeering(instanceID, peeringID, 1, sleep, timeout)
-	return data, err
+	return api.retryAcceptVpcPeering(instanceID, peeringID, 1, sleep, timeout)
 }
 
 func (api *API) RemoveVpcPeering(instanceID int, peeringID string) error {
