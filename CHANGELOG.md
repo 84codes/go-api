@@ -1,3 +1,10 @@
+## 1.8.0 (May 24, 2022)
+
+FEATURES:
+
+* api/vpc_peering.go - Add support for retries and timeout to accept/remove VPC peering [#20](https://github.com/84codes/go-api/pull/20)
+* api/vpc_peering_withvpcid.go - Add support for retries and timeout to accept/remove VPC peering [#20](https://github.com/84codes/go-api/pull/20)
+
 ## 1.7.0 (May 13, 2022)
 
 FEATURES:
