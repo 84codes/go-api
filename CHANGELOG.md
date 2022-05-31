@@ -1,3 +1,10 @@
+## 1.8.1 (May 31, 2022)
+
+IMPROVEMENTS:
+
+* api/nodes - Use the existing instance actions API [#21](https://github.com/84codes/go-api/pull/21)
+* api/rabbitmq_configuration.go - Rename file and functions
+
 ## 1.8.0 (May 24, 2022)
 
 FEATURES:
