@@ -6,13 +6,13 @@ import (
 	"strconv"
 )
 
-func (api *API) ResizeDisk(instanceID int, params map[string]interface{}) (map[string]interface{}, error) {
+func (api *API) ResizeDisk(instanceID, extraDiskSize int) (map[string]interface{}, error) {
 	data := make(map[string]interface{})
 	failed := make(map[string]interface{})
 	id := strconv.Itoa(instanceID)
 	log.Printf("[DEBUG] go-api::disk::resize instance ID: %s", id)
-	path := fmt.Sprintf("api/instances/%s/disk", id)
-	response, err := api.sling.New().Put(path).BodyJSON(params).Receive(&data, &failed)
+	path := fmt.Sprintf("api/instances/%s/disk?extra_disk_size=%d", id, extraDiskSize)
+	response, err := api.sling.New().Put(path).Receive(&data, &failed)
 	if err != nil {
 		return nil, err
 	}
