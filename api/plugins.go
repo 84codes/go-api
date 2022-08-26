@@ -143,5 +143,6 @@ func (api *API) DeletePlugin(instanceID int, pluginName string) error {
 		return fmt.Errorf("DeletePlugin failed, status: %v, message: %s", response.StatusCode, failed)
 	}
 
-	return nil
+	_, err = api.waitUntilPluginChanged(instanceID, pluginName, false)
+	return err
 }
