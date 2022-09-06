@@ -10,7 +10,6 @@ import (
 type PluginParams struct {
 	Name    string `json:"plugin_name,omitempty"`
 	Enabled bool   `json:"enabled,omitempty"`
-	Async   bool   `json:"async,omitempty"`
 }
 
 func (api *API) waitUntilPluginChanged(instanceID int, pluginName string, enabled bool) (map[string]interface{}, error) {
@@ -30,7 +29,7 @@ func (api *API) waitUntilPluginChanged(instanceID int, pluginName string, enable
 
 func (api *API) EnablePlugin(instanceID int, pluginName string) (map[string]interface{}, error) {
 	failed := make(map[string]interface{})
-	params := &PluginParams{Name: pluginName, Async: true}
+	params := &PluginParams{Name: pluginName}
 	log.Printf("[DEBUG] go-api::plugin::enable instance id: %v, params: %v", instanceID, pluginName)
 	path := fmt.Sprintf("/api/instances/%d/plugins?async=true", instanceID)
 	response, err := api.sling.New().Post(path).BodyJSON(params).Receive(nil, &failed)
@@ -98,7 +97,7 @@ func (api *API) readPluginsWithRetry(instanceID, attempts, sleep int) ([]map[str
 
 func (api *API) UpdatePlugin(instanceID int, params map[string]interface{}) (map[string]interface{}, error) {
 	failed := make(map[string]interface{})
-	pluginParams := &PluginParams{Name: params["name"].(string), Enabled: params["enabled"].(bool), Async: true}
+	pluginParams := &PluginParams{Name: params["name"].(string), Enabled: params["enabled"].(bool)}
 	log.Printf("[DEBUG] go-api::plugin::update instance ID: %v, params: %v", instanceID, pluginParams)
 	path := fmt.Sprintf("/api/instances/%d/plugins?async=true", instanceID)
 	response, err := api.sling.New().Put(path).BodyJSON(pluginParams).Receive(nil, &failed)
@@ -131,10 +130,9 @@ func (api *API) DisablePlugin(instanceID int, pluginName string) (map[string]int
 
 func (api *API) DeletePlugin(instanceID int, pluginName string) error {
 	failed := make(map[string]interface{})
-	pluginParams := &PluginParams{Async: true}
 	log.Printf("[DEBUG] go-api::plugin::delete instance: %v, name: %v", instanceID, pluginName)
 	path := fmt.Sprintf("/api/instances/%d/plugins/%s?async=true", instanceID, pluginName)
-	response, err := api.sling.New().Delete(path).BodyJSON(pluginParams).Receive(nil, &failed)
+	response, err := api.sling.New().Delete(path).Receive(nil, &failed)
 
 	if err != nil {
 		return err
