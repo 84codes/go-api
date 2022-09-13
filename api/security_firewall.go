@@ -65,7 +65,7 @@ func (api *API) createFirewallSettingsWithReply(instanceID int, params []map[str
 				break
 			}
 		case failed["error_code"].(float64) == 40002:
-			return fmt.Errorf("Validation failed, invalid address")
+			return fmt.Errorf("Firewall rules validation failed due to: %s", failed["error"].(string))
 		}
 	}
 	return fmt.Errorf("Create new firewall rules failed, status: %v, message: %s", response.StatusCode, failed)
