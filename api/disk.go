@@ -28,8 +28,8 @@ func (api *API) ResizeDisk(instanceID int, params map[string]interface{}) (map[s
 		case failed["error_code"] == nil:
 			break
 		case failed["error_code"].(float64) == 40002:
-			return nil, fmt.Errorf(failed["error_code"].(string))
+			return nil, fmt.Errorf("Resize disk failed: %s", failed["error"].(string))
 		}
 	}
-	return nil, fmt.Errorf("ResizeDisk failed, status: %v, message: %s", response.StatusCode, failed)
+	return nil, fmt.Errorf("Resize disk failed, status: %v, message: %s", response.StatusCode, failed)
 }
