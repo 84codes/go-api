@@ -1,6 +1,19 @@
-## 1.9.0 (Jul 01, 2022)
+## 1.9.1 (Sep 14, 2022)
+
+NOTES:
+
+* Asynchronous request for plugin/community actions.
 
 IMPROVEMENTS:
+
+* api/plugin.go - Update plugin action endpoints to be called asynchronous [#24](https://github.com/84codes/go-api/pull/24)
+* api/plugins_community.go - Update plugin action endpoints to be called asynchronous [#24](https://github.com/84codes/go-api/pull/24)
+* api/security_firewall.go - Update error handling [#25](https://github.com/84codes/go-api/pull/25)
+* api/disk.go - Update error handling [#26](https://github.com/84codes/go-api/pull/26)
+
+## 1.9.0 (Jul 01, 2022)
+
+FEATURES:
 
 * api/disk.go - Add new endpoint for resize disk [#22](https://github.com/84codes/go-api/pull/22)
 
