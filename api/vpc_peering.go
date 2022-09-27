@@ -113,30 +113,34 @@ func (api *API) retryAcceptVpcPeering(instanceID int, peeringID string, attempt,
 	if err != nil {
 		return nil, err
 	}
-	if attempt*sleep >= timeout {
-		return nil, fmt.Errorf("AcceptVpcPeering failed, reached timeout of %d seconds", timeout)
-	} else if response.StatusCode == 400 {
-		errorCode := failed["error_code"].(float64)
-		if errorCode == 40001 {
+
+	switch {
+	case response.StatusCode == 200:
+		return data, nil
+	case attempt*sleep >= timeout:
+		return nil, fmt.Errorf("Accept VPC peering failed, reached timeout of %d seconds", timeout)
+	case response.StatusCode == 400:
+		switch {
+		case failed["error_code"] == nil:
+			break
+		case failed["error_code"].(float64) == 40001:
 			log.Printf("[DEBUG] go-api::vpc_peering::accept firewall not finished configuring will retry "+
 				"accept VPC peering, attempt: %d, until timeout: %d", attempt, (timeout - (attempt * sleep)))
 			attempt++
 			time.Sleep(time.Duration(sleep) * time.Second)
 			return api.retryAcceptVpcPeering(instanceID, peeringID, attempt, sleep, timeout)
 		}
-		return nil, fmt.Errorf("AcceptVpcPeering failed, status: %v, message: %s", response.StatusCode, failed)
-	} else if response.StatusCode != 200 {
-		return nil, fmt.Errorf("AcceptVpcPeering failed, status: %v, message: %s", response.StatusCode, failed)
 	}
-	return data, nil
+	return nil, fmt.Errorf("Accept VPC peering failed, status: %v, message: %s", response.StatusCode, failed)
 }
 
 func (api *API) AcceptVpcPeering(instanceID int, peeringID string, sleep, timeout int) (map[string]interface{}, error) {
-	_, err := api.waitForPeeringStatus(instanceID, peeringID)
+	attempt, err := api.WaitForPeeringStatus(instanceID, peeringID, 1, sleep, timeout)
+	log.Printf("[DEBUG] go-api::vpc_peering::accept attempt: %d, sleep: %d, timeout: %d", attempt, sleep, timeout)
 	if err != nil {
 		return nil, err
 	}
-	return api.retryAcceptVpcPeering(instanceID, peeringID, 1, sleep, timeout)
+	return api.retryAcceptVpcPeering(instanceID, peeringID, attempt, sleep, timeout)
 }
 
 func (api *API) retryRemoveVpcPeering(instanceID int, peeringID string, attempt, sleep, timeout int) error {
@@ -144,26 +148,26 @@ func (api *API) retryRemoveVpcPeering(instanceID int, peeringID string, attempt,
 	log.Printf("[DEBUG] go-api::vpc_peering::remove instance id: %v, peering id: %v", instanceID, peeringID)
 	path := fmt.Sprintf("/api/instances/%v/vpc-peering/%v", instanceID, peeringID)
 	response, err := api.sling.New().Delete(path).Receive(nil, &failed)
-
-	if err != nil {
+	switch {
+	case err == nil:
 		return err
-	}
-	if attempt*sleep >= timeout {
-		return fmt.Errorf("RemoveVpcPeering failed, reached timeout of %d seconds", timeout)
-	} else if response.StatusCode == 400 {
-		errorCode := failed["error_code"].(float64)
-		if errorCode == 40001 {
+	case response.StatusCode == 204:
+		return nil
+	case attempt*sleep >= timeout:
+		return fmt.Errorf("Remove VPC peering failed, reached timeout of %d seconds", timeout)
+	case response.StatusCode == 400:
+		switch {
+		case failed["error_code"] == nil:
+			break
+		case failed["error_code"].(float64) == 40001:
 			log.Printf("[DEBUG] go-api::vpc_peering::remove firewall not finished configuring will retry "+
-				"accept VPC peering, attempt: %d, until timeout: %d", attempt, (timeout - (attempt * sleep)))
+				"removing VPC peering, attempt: %d, until timeout: %d", attempt, (timeout - (attempt * sleep)))
 			attempt++
 			time.Sleep(time.Duration(sleep) * time.Second)
 			return api.retryRemoveVpcPeering(instanceID, peeringID, attempt, sleep, timeout)
 		}
-		return fmt.Errorf("RemoveVpcPeering failed, status: %v, message: %s", response.StatusCode, failed)
-	} else if response.StatusCode != 204 {
-		return fmt.Errorf("RemoveVpcPeering failed, status: %v, message: %s", response.StatusCode, failed)
 	}
-	return nil
+	return fmt.Errorf("Remove VPC peering failed, status: %v, message: %s", response.StatusCode, failed)
 }
 
 func (api *API) RemoveVpcPeering(instanceID int, peeringID string, sleep, timeout int) error {
