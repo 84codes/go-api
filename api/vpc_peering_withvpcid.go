@@ -9,26 +9,10 @@ import (
 	"time"
 )
 
-func (api *API) waitForPeeringStatusWithVpcId(vpcID, peeringID string) (map[string]interface{}, error) {
-	log.Printf("[DEBUG] go-api::vpc_peering_withvpcid::waitForPeeringStatus instance id: %s, peering id: %s", vpcID, peeringID)
-	data := make(map[string]interface{})
-	failed := make(map[string]interface{})
-	for {
-		time.Sleep(10 * time.Second)
-		path := fmt.Sprintf("/api/vpcs/%s/vpc-peering/status/%s", vpcID, peeringID)
-		response, err := api.sling.New().Path(path).Receive(&data, &failed)
-
-		if err != nil {
-			return nil, err
-		}
-		if response.StatusCode != 200 {
-			return nil, fmt.Errorf("Wait for peering status failed, status: %v, message: %s", response.StatusCode, failed)
-		}
-		switch data["status"] {
-		case "active", "pending-acceptance":
-			return data, nil
-		}
-	}
+func (api *API) WaitForPeeringStatusWithVpcID(vpcID, peeringID string, attempt, sleep, timeout int) (int, error) {
+	time.Sleep(10 * time.Second)
+	path := fmt.Sprintf("/api/vpcs/%s/vpc-peering/status/%s", vpcID, peeringID)
+	return api.waitForPeeringStatusWithRetry(path, attempt, sleep, timeout)
 }
 
 func (api *API) ReadVpcInfoWithVpcId(vpcID string) (map[string]interface{}, error) {
