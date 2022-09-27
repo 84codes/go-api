@@ -7,27 +7,49 @@ import (
 	"time"
 )
 
-func (api *API) waitForPeeringStatus(instanceID int, peeringID string) (map[string]interface{}, error) {
-	log.Printf("[DEBUG] go-api::vpc_peering::waitForPeeringStatus instance id: %v, peering id: %v", instanceID, peeringID)
+func (api *API) WaitForPeeringStatus(instanceID int, peeringID string, attempt, sleep, timeout int) (int, error) {
+	time.Sleep(10 * time.Second)
+	path := fmt.Sprintf("/api/instances/%v/vpc-peering/status/%v", instanceID, peeringID)
+	return api.waitForPeeringStatusWithRetry(path, attempt, sleep, timeout)
+}
+
+func (api *API) waitForPeeringStatusWithRetry(path string, attempt, sleep, timeout int) (int, error) {
+	log.Printf("[DEBUG] go-api::vpc_peering::waitForPeeringStatusWithRetry path: %s, "+
+		"attempt: %d, sleep: %d, timeout: %d", path, attempt, sleep, timeout)
 	data := make(map[string]interface{})
 	failed := make(map[string]interface{})
-	for {
-		time.Sleep(10 * time.Second)
-		path := fmt.Sprintf("/api/instances/%v/vpc-peering/status/%v", instanceID, peeringID)
-		response, err := api.sling.New().Path(path).Receive(&data, &failed)
-		log.Printf("[DEBUG] go-api::vpc_peering::waitForPeeringStatus  response: %v, data: %v, failed: %v", response, data, failed)
+	response, err := api.sling.New().Path(path).Receive(&data, &failed)
+	if err != nil {
+		return attempt, err
+	}
 
-		if err != nil {
-			return nil, err
-		}
-		if response.StatusCode != 200 {
-			return nil, fmt.Errorf("waitForPeeringStatus failed, status: %v, message: %s", response.StatusCode, failed)
-		}
+	switch {
+	case attempt*sleep >= timeout:
+		return attempt, fmt.Errorf("Remove VPC peering failed, reached timeout of %d seconds", timeout)
+	case response.StatusCode == 200:
 		switch data["status"] {
 		case "active", "pending-acceptance":
-			return data, nil
+			return attempt, nil
+		}
+		// Todo: Check if needed?
+		log.Printf("[DEBUG] go-api::vpc_peering::waitForPeeringStatusWithRetry No status yet, "+
+			"attempt: %d, until timeout: %d", attempt, (timeout - (attempt * sleep)))
+		attempt++
+		time.Sleep(time.Duration(sleep) * time.Second)
+		return api.waitForPeeringStatusWithRetry(path, attempt, sleep, timeout)
+	case response.StatusCode == 400:
+		switch {
+		case failed["error_code"] == nil:
+			break
+		case failed["error_code"].(float64) == 40003:
+			log.Printf("[DEBUG] go-api::vpc_peering::waitForPeeringStatusWithRetry Could not find VPC peering, "+
+				"attempt: %d, until timeout: %d", attempt, (timeout - (attempt * sleep)))
+			attempt++
+			time.Sleep(time.Duration(sleep) * time.Second)
+			return api.waitForPeeringStatusWithRetry(path, attempt, sleep, timeout)
 		}
 	}
+	return attempt, fmt.Errorf("Accept VPC peering failed, status: %v, message: %v", response.StatusCode, failed)
 }
 
 func (api *API) ReadVpcInfo(instanceID int) (map[string]interface{}, error) {
