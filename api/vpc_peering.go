@@ -141,7 +141,6 @@ func (api *API) waitForPeeringStatusWithRetry(path, peeringID string, attempt, s
 		"attempt: %d, sleep: %d, timeout: %d", path, attempt, sleep, timeout)
 	data := make(map[string]interface{})
 	failed := make(map[string]interface{})
-
 	response, err := api.sling.New().Path(path).Receive(&data, &failed)
 
 	switch {
@@ -161,8 +160,8 @@ func (api *API) waitForPeeringStatusWithRetry(path, peeringID string, attempt, s
 		case failed["error_code"] == nil:
 			break
 		case failed["error_code"].(float64) == 40003:
-			log.Printf("[DEBUG] go-api::vpc_peering::waitForPeeringStatusWithRetry Could not find VPC peering, "+
-				"attempt: %d, until timeout: %d", attempt, (timeout - (attempt * sleep)))
+			log.Printf("[DEBUG] go-api::vpc_peering::waitForPeeringStatusWithRetry %s, attempt: %d, until timeout: %d",
+				failed["message"].(string), attempt, (timeout - (attempt * sleep)))
 			attempt++
 			time.Sleep(time.Duration(sleep) * time.Second)
 			return api.waitForPeeringStatusWithRetry(path, peeringID, attempt, sleep, timeout)
