@@ -52,14 +52,16 @@ func (api *API) retryAcceptVpcPeering(path string, attempt, sleep, timeout int) 
 	failed := make(map[string]interface{})
 	response, err := api.sling.New().Put(path).Receive(&data, &failed)
 
-	switch {
-	case err != nil:
+	if err != nil {
 		return nil, err
-	case response.StatusCode == 200:
-		return data, nil
-	case attempt*sleep >= timeout:
+	} else if attempt*sleep > timeout {
 		return nil, fmt.Errorf("Accept VPC peering failed, reached timeout of %d seconds", timeout)
-	case response.StatusCode == 400:
+	}
+
+	switch response.StatusCode {
+	case 200:
+		return data, nil
+	case 400:
 		switch {
 		case failed["error_code"] == nil:
 			break
@@ -83,10 +85,14 @@ func (api *API) readVpcInfoWithRetry(path string, attempts, sleep int) (map[stri
 	response, err := api.sling.New().Get(path).Receive(&data, &failed)
 	log.Printf("[DEBUG] go-api::vpc_peering::info data: %v", data)
 
-	switch {
-	case err != nil:
+	if err != nil {
 		return nil, err
-	case response.StatusCode == 400:
+	}
+
+	switch response.StatusCode {
+	case 200:
+		return data, nil
+	case 400:
 		if strings.Compare(failed["error"].(string), "Timeout talking to backend") == 0 {
 			if attempts--; attempts > 0 {
 				log.Printf("[INFO] go-api::vpc_peering::info Timeout talking to backend "+
@@ -98,7 +104,7 @@ func (api *API) readVpcInfoWithRetry(path string, attempts, sleep int) (map[stri
 		}
 	}
 
-	return data, nil
+	return nil, fmt.Errorf("ReadInfo failed, status: %v, message: %s", response.StatusCode, failed)
 }
 
 func (api *API) retryRemoveVpcPeering(path string, attempt, sleep, timeout int) error {
@@ -107,14 +113,16 @@ func (api *API) retryRemoveVpcPeering(path string, attempt, sleep, timeout int) 
 	failed := make(map[string]interface{})
 	response, err := api.sling.New().Delete(path).Receive(nil, &failed)
 
-	switch {
-	case err != nil:
+	if err != nil {
 		return err
-	case response.StatusCode == 204:
-		return nil
-	case attempt*sleep >= timeout:
+	} else if attempt*sleep > timeout {
 		return fmt.Errorf("Remove VPC peering failed, reached timeout of %d seconds", timeout)
-	case response.StatusCode == 400:
+	}
+
+	switch response.StatusCode {
+	case 204:
+		return nil
+	case 400:
 		switch {
 		case failed["error_code"] == nil:
 			break
@@ -143,19 +151,21 @@ func (api *API) waitForPeeringStatusWithRetry(path, peeringID string, attempt, s
 	failed := make(map[string]interface{})
 	response, err := api.sling.New().Path(path).Receive(&data, &failed)
 
-	switch {
-	case err != nil:
+	if err != nil {
 		return attempt, err
-	case attempt*sleep >= timeout:
+	} else if attempt*sleep > timeout {
 		return attempt, fmt.Errorf("Accept VPC peering failed, reached timeout of %d seconds", timeout)
-	case response.StatusCode == 200:
+	}
+
+	switch response.StatusCode {
+	case 200:
 		switch data["status"] {
 		case "active", "pending-acceptance":
 			return attempt, nil
 		case "deleted":
 			return attempt, fmt.Errorf("Peering: %s has been deleted", peeringID)
 		}
-	case response.StatusCode == 400:
+	case 400:
 		switch {
 		case failed["error_code"] == nil:
 			break
