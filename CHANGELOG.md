@@ -1,3 +1,10 @@
+## 1.9.2 (Oct 07, 2022)
+
+IMPROVEMENTS:
+
+* api/vpc_peering.go - Retry VPC peering and wait for status [#27](https://github.com/84codes/go-api/pull/27)
+* api/vpc_peering_withvpcid.go - Retry VPC peering and wait for status [#27](https://github.com/84codes/go-api/pull/27)
+
 ## 1.9.1 (Sep 14, 2022)
 
 NOTES:
