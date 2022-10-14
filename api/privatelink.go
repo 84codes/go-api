@@ -7,12 +7,13 @@ import (
 )
 
 func (api *API) EnablePrivatelink(instanceID int) error {
-	// TODO: Check if instance have VPC already?
-	// TODO: Otherwise just need to first enable it before moving on.
 	var (
 		failed map[string]interface{}
 		path   = fmt.Sprintf("/api/instances/%d/privatelink", instanceID)
 	)
+	if err, ok := api.enableVPC(instanceID); ok {
+		return err
+	}
 	response, err := api.sling.New().Post(path).Receive(nil, &failed)
 	if err != nil {
 		return err
@@ -92,4 +93,23 @@ func (api *API) waitForEnablePrivatelinkWithRetry(instanceID, attempts, sleep in
 	}
 	return fmt.Errorf("Wait for enable PrivateLink failed, status: %v, message: %s",
 		response.StatusCode, failed)
+}
+
+func (api *API) enableVPC(instanceID int) (error, bool) {
+	var (
+		failed map[string]interface{}
+		path   = fmt.Sprintf("/api/instances/%d/vpc", instanceID)
+	)
+	data, _ := api.ReadInstance(fmt.Sprintf("%d", instanceID))
+	if data["vpc_id"] == nil {
+		response, err := api.sling.New().Put(path).Receive(nil, &failed)
+		if err != nil {
+			return err, false
+		} else if response.StatusCode == 200 {
+			return nil, true
+		}
+		return fmt.Errorf("Enable VPC failed, status: %v, message: %s",
+			response.StatusCode, failed), false
+	}
+	return nil, true
 }
