@@ -3,7 +3,6 @@ package api
 import (
 	"fmt"
 	"log"
-	"net/http"
 	"time"
 )
 
@@ -12,19 +11,20 @@ import (
 // Wait until finished with configureable sleep and timeout.
 func (api *API) EnablePrivatelink(instanceID, sleep, timeout int) error {
 	var (
-		failed   map[string]interface{}
-		path     = fmt.Sprintf("/api/instances/%d/privatelink", instanceID)
-		err      error
-		response *http.Response
+		failed map[string]interface{}
+		path   = fmt.Sprintf("/api/instances/%d/privatelink", instanceID)
 	)
 
-	if err = api.enableVPC(instanceID); err != nil {
+	if err := api.enableVPC(instanceID); err != nil {
 		return err
 	}
 
-	if response, err = api.sling.New().Post(path).Receive(nil, &failed); err != nil {
+	response, err := api.sling.New().Post(path).Receive(nil, &failed)
+	if err != nil {
 		return err
-	} else if response.StatusCode == 200 {
+	}
+
+	if response.StatusCode == 200 {
 		return api.waitForEnablePrivatelinkWithRetry(instanceID, 1, sleep, timeout)
 	} else {
 		return fmt.Errorf("Enable PrivateLink failed, status: %v, message: %s",
@@ -40,9 +40,12 @@ func (api *API) ReadPrivatelink(instanceID int) (map[string]interface{}, error) 
 		path   = fmt.Sprintf("/api/instances/%d/privatelink", instanceID)
 	)
 
-	if response, err := api.sling.New().Get(path).Receive(&data, &failed); err != nil {
+	response, err := api.sling.New().Get(path).Receive(&data, &failed)
+	if err != nil {
 		return nil, err
-	} else if response.StatusCode == 200 {
+	}
+
+	if response.StatusCode == 200 {
 		return data, nil
 	} else {
 		return nil, fmt.Errorf("Read PrivateLink failed, status: %v, message: %s",
@@ -60,7 +63,9 @@ func (api *API) UpdatePrivatelink(instanceID int, params map[string][]interface{
 	response, err := api.sling.New().Put(path).BodyJSON(params).Receive(nil, &failed)
 	if err != nil {
 		return err
-	} else if response.StatusCode == 200 {
+	}
+
+	if response.StatusCode == 200 {
 		return nil
 	} else {
 		return fmt.Errorf("Update Privatelink failed, status: %v, message: %s",
@@ -75,9 +80,12 @@ func (api *API) DisablePrivatelink(instanceID int) error {
 		path   = fmt.Sprintf("/api/instances/%d/privatelink", instanceID)
 	)
 
-	if response, err := api.sling.New().Delete(path).Receive(nil, &failed); err != nil {
+	response, err := api.sling.New().Delete(path).Receive(nil, &failed)
+	if err != nil {
 		return err
-	} else if response.StatusCode == 200 {
+	}
+
+	if response.StatusCode == 200 {
 		return nil
 	} else {
 		return fmt.Errorf("Disable Privatelink failed, status: %v, message: %s",
@@ -88,14 +96,13 @@ func (api *API) DisablePrivatelink(instanceID int) error {
 // waitForEnablePrivatelinkWithRetry: Wait until status change from pending to enable
 func (api *API) waitForEnablePrivatelinkWithRetry(instanceID, attempt, sleep, timeout int) error {
 	var (
-		data     map[string]interface{}
-		failed   map[string]interface{}
-		path     = fmt.Sprintf("/api/instances/%d/privatelink", instanceID)
-		response *http.Response
-		err      error
+		data   map[string]interface{}
+		failed map[string]interface{}
+		path   = fmt.Sprintf("/api/instances/%d/privatelink", instanceID)
 	)
 
-	if response, err = api.sling.New().Get(path).Receive(&data, &failed); err != nil {
+	response, err := api.sling.New().Get(path).Receive(&data, &failed)
+	if err != nil {
 		return err
 	} else if attempt*sleep > timeout {
 		return fmt.Errorf("Enable PrivateLink failed, reached timeout of %d seconds", timeout)
@@ -130,9 +137,12 @@ func (api *API) enableVPC(instanceID int) error {
 
 	data, _ := api.ReadInstance(fmt.Sprintf("%d", instanceID))
 	if data["vpc"] == nil {
-		if response, err := api.sling.New().Put(path).Receive(nil, &failed); err != nil {
+		response, err := api.sling.New().Put(path).Receive(nil, &failed)
+		if err != nil {
 			return err
-		} else if response.StatusCode == 200 {
+		}
+
+		if response.StatusCode == 200 {
 			log.Printf("[DEBUG] PrivateLink: VPC features enabled")
 			return nil
 		} else {
