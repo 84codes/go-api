@@ -1,3 +1,9 @@
+## 1.10.0 (Oct 24, 2022)
+
+FEATURES:
+
+* api/privatelink.go - Add new endpoints to support PrivateLink [#28](https://github.com/84codes/go-api/pull/28)
+
 ## 1.9.2 (Oct 07, 2022)
 
 IMPROVEMENTS:
