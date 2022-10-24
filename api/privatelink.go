@@ -9,7 +9,7 @@ import (
 // EnablePrivatelink: Enable PrivateLink and wait until finished.
 // Need to enable VPC for an instance, if no standalone VPC used.
 // Wait until finished with configureable sleep and timeout.
-func (api *API) EnablePrivatelink(instanceID, sleep, timeout int) error {
+func (api *API) EnablePrivatelink(instanceID int, params map[string][]interface{}, sleep, timeout int) error {
 	var (
 		failed map[string]interface{}
 		path   = fmt.Sprintf("/api/instances/%d/privatelink", instanceID)
@@ -19,7 +19,7 @@ func (api *API) EnablePrivatelink(instanceID, sleep, timeout int) error {
 		return err
 	}
 
-	response, err := api.sling.New().Post(path).Receive(nil, &failed)
+	response, err := api.sling.New().Post(path).BodyJSON(params).Receive(nil, &failed)
 	if err != nil {
 		return err
 	}
