@@ -24,7 +24,7 @@ func (api *API) EnablePrivatelink(instanceID int, params map[string][]interface{
 		return err
 	}
 
-	if response.StatusCode == 200 {
+	if response.StatusCode == 204 {
 		return api.waitForEnablePrivatelinkWithRetry(instanceID, 1, sleep, timeout)
 	} else {
 		return fmt.Errorf("Enable PrivateLink failed, status: %v, message: %s",
@@ -65,7 +65,7 @@ func (api *API) UpdatePrivatelink(instanceID int, params map[string][]interface{
 		return err
 	}
 
-	if response.StatusCode == 200 {
+	if response.StatusCode == 204 {
 		return nil
 	} else {
 		return fmt.Errorf("Update Privatelink failed, status: %v, message: %s",
@@ -85,7 +85,7 @@ func (api *API) DisablePrivatelink(instanceID int) error {
 		return err
 	}
 
-	if response.StatusCode == 200 {
+	if response.StatusCode == 204 {
 		return nil
 	} else {
 		return fmt.Errorf("Disable Privatelink failed, status: %v, message: %s",
