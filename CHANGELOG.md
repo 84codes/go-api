@@ -1,3 +1,9 @@
+## 1.10.1 (Dec 07, 2022)
+
+IMPROVEMENTS:
+
+* api/rabbitmq_configuration.gp - Update RabbitMQ configuration response handling when backend is busy
+
 ## 1.10.0 (Oct 24, 2022)
 
 FEATURES:
