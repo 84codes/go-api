@@ -1,4 +1,4 @@
-## 1.10.2 (Not released)
+## 1.10.2 (Dec 14, 2022)
 
 IMPROVEMENTS:
 
