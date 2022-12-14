@@ -1,3 +1,9 @@
+## 1.10.2 (Not released)
+
+IMPROVEMENTS:
+
+* api/security_firewall.go - Add configurable sleep and timeout when configuring firewall settings [#30](https://github.com/84codes/go-api/pull/30)
+
 ## 1.10.1 (Dec 07, 2022)
 
 IMPROVEMENTS:
