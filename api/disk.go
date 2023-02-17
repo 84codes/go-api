@@ -4,14 +4,26 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"time"
 )
 
-func (api *API) ResizeDisk(instanceID int, params map[string]interface{}) (map[string]interface{}, error) {
-	data := make(map[string]interface{})
-	failed := make(map[string]interface{})
-	id := strconv.Itoa(instanceID)
-	log.Printf("[DEBUG] go-api::disk::resize instance ID: %s", id)
-	path := fmt.Sprintf("api/instances/%s/disk", id)
+func (api *API) ResizeDisk(instanceID int, params map[string]interface{}, sleep, timeout int) (map[string]interface{}, error) {
+	var (
+		id   = strconv.Itoa(instanceID)
+		path = fmt.Sprintf("api/instances/%s/disk", id)
+	)
+	log.Printf("[DEBUG] go-api::resizeDisk::resizeDiskWithRetry path: %s, "+
+		"attempt: %d, sleep: %d, timeout: %d", path, 1, sleep, timeout)
+	return api.resizeDiskWithRetry(id, params, 1, sleep, timeout)
+}
+
+func (api *API) resizeDiskWithRetry(id string, params map[string]interface{}, attempt, sleep, timeout int) (map[string]interface{}, error) {
+	var (
+		data   = make(map[string]interface{})
+		failed = make(map[string]interface{})
+		path   = fmt.Sprintf("api/instances/%s/disk", id)
+	)
+
 	response, err := api.sling.New().Put(path).BodyJSON(params).Receive(&data, &failed)
 	if err != nil {
 		return nil, err
@@ -29,6 +41,16 @@ func (api *API) ResizeDisk(instanceID int, params map[string]interface{}) (map[s
 			break
 		case failed["error_code"].(float64) == 40002:
 			return nil, fmt.Errorf("Resize disk failed: %s", failed["error"].(string))
+		case failed["error_code"].(float64) == 40003:
+			if failed["error"] == "Timeout talking to backend" {
+				log.Printf("[DEBUG] go-api::resizeDisk::resizeDiskWithRetry Timeout talking to backend, "+
+					" will try again, attempt: %d, until timeout: %d", attempt, (timeout - (attempt * sleep)))
+				attempt++
+				time.Sleep(time.Duration(sleep) * time.Second)
+				return api.resizeDiskWithRetry(id, params, attempt, sleep, timeout)
+			} else {
+				break
+			}
 		}
 	}
 	return nil, fmt.Errorf("Resize disk failed, status: %v, message: %s", response.StatusCode, failed)
