@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"log"
+	"strconv"
 )
 
 func (api *API) CreateAwsEventBridge(instanceID int, params map[string]interface{}) (map[string]interface{}, error) {
@@ -20,6 +21,12 @@ func (api *API) CreateAwsEventBridge(instanceID int, params map[string]interface
 	if response.StatusCode != 201 {
 		return nil, fmt.Errorf("Failed to create AWS EventBridge, status: %v, message: %s",
 			response.StatusCode, failed)
+	}
+	if id, ok := data["id"]; ok {
+		data["id"] = strconv.FormatFloat(id.(float64), 'f', 0, 64)
+		log.Printf("[DEBUG] go-api::aws-eventbridge::create EventBridge identifier: %v", data["id"])
+	} else {
+		return nil, fmt.Errorf("go-api::aws-eventbridge::create Invalid identifier: %v", data["id"])
 	}
 
 	return data, nil
