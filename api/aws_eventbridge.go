@@ -81,7 +81,7 @@ func (api *API) DeleteAwsEventBridge(instanceID int, eventbridgeID string) error
 	if err != nil {
 		return err
 	}
-	if response.StatusCode != 200 {
+	if response.StatusCode != 204 {
 		return fmt.Errorf("Failed to delete AWS EventBridge, status: %v, message: %s", response.StatusCode, failed)
 	}
 
