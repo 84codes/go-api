@@ -48,7 +48,7 @@ func (api *API) ReadAwsEventBridge(instanceID int, eventbridgeID string) (map[st
 			response.StatusCode, failed)
 	}
 
-	return extractInfo(data["url"].(string)), nil
+	return data, nil
 }
 
 func (api *API) ReadAwsEventBridges(instanceID int) (map[string]interface{}, error) {
@@ -67,7 +67,7 @@ func (api *API) ReadAwsEventBridges(instanceID int) (map[string]interface{}, err
 			response.StatusCode, failed)
 	}
 
-	return extractInfo(data["url"].(string)), nil
+	return data, nil
 }
 
 func (api *API) DeleteAwsEventBridge(instanceID int, eventbridgeID string) error {
