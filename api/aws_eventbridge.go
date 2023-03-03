@@ -81,9 +81,14 @@ func (api *API) DeleteAwsEventBridge(instanceID int, eventbridgeID string) error
 	if err != nil {
 		return err
 	}
-	if response.StatusCode != 204 {
-		return fmt.Errorf("Failed to delete AWS EventBridge, status: %v, message: %s", response.StatusCode, failed)
+
+	switch response.StatusCode {
+	case 204:
+		return nil
+	case 404:
+		// AWS EventBridge not found in the backend. Silent let the resource be deleted.
+		return nil
 	}
 
-	return nil
+	return fmt.Errorf("Failed to delete AWS EventBridge, status: %v, message: %s", response.StatusCode, failed)
 }
