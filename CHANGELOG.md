@@ -1,3 +1,9 @@
+## 1.11.0 (Mar 07, 2023)
+
+FEATURES:
+
+* api/aws_eventbridge.go - Add new endpoints to support AWS EventBridge [#32](https://github.com/84codes/go-api/pull/32)
+
 ## 1.10.2 (Dec 14, 2022)
 
 IMPROVEMENTS:
