@@ -53,5 +53,5 @@ func (api *API) resizeDiskWithRetry(id string, params map[string]interface{}, at
 			}
 		}
 	}
-	return nil, fmt.Errorf("Resize disk failed, status: %v, message: %s", response.StatusCode, failed)
+	return nil, fmt.Errorf("Resize disk failed, status: %v, message: %s", response.StatusCode, failed["error"])
 }
