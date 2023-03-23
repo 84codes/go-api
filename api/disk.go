@@ -29,13 +29,13 @@ func (api *API) resizeDiskWithRetry(id string, params map[string]interface{}, at
 		return nil, err
 	}
 
-	switch {
-	case response.StatusCode == 200:
+	switch response.StatusCode {
+	case 200:
 		if err = api.waitUntilAllNodesReady(id); err != nil {
 			return nil, err
 		}
 		return data, nil
-	case response.StatusCode == 400:
+	case 400:
 		switch {
 		case failed["error_code"] == nil:
 			break
