@@ -27,6 +27,8 @@ func (api *API) resizeDiskWithRetry(id string, params map[string]interface{}, at
 	response, err := api.sling.New().Put(path).BodyJSON(params).Receive(&data, &failed)
 	if err != nil {
 		return nil, err
+	} else if attempt*sleep > timeout {
+		return nil, fmt.Errorf("Wait until resize disk failed, reached timeout of %d seconds", timeout)
 	}
 
 	switch response.StatusCode {
