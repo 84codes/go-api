@@ -56,6 +56,37 @@ func (api *API) waitUntilAllNodesReady(instanceID string) error {
 	}
 }
 
+func (api *API) waitUntilAllNodesReadyWithTimeout(instanceID string, attempt, sleep, timeout int) error {
+	var (
+		data   []map[string]interface{}
+		failed map[string]interface{}
+		path   = fmt.Sprintf("api/instances/%v/nodes", instanceID)
+	)
+	log.Printf("[DEBUG] go-api::instance::waitUntilAllNodesReadyWithTimeout not yet ready, "+
+		" will try again, attempt: %d, until timeout: %d", attempt, (timeout - (attempt * sleep)))
+
+	_, err := api.sling.New().Path(path).Receive(&data, &failed)
+	if err != nil {
+		log.Printf("[ERROR] go-api::instance::waitUntilAllNodesReadyWithTimeout error: %v", err)
+		return err
+	} else if attempt*sleep > timeout {
+		return fmt.Errorf("Wait until all nodes ready reached timeout of %d seconds", timeout)
+	}
+
+	ready := true
+	for _, node := range data {
+		log.Printf("[DEBUG] go-api::instance::waitUntilAllNodesReadyWithTimeout ready: %v, configured: %v", ready, node["configured"])
+		ready = ready && node["configured"].(bool)
+	}
+	log.Printf("[DEBUG] go-api::instance::waitUntilAllNodesReadyWithTimeout ready: %v", ready)
+	if ready {
+		return nil
+	}
+	attempt++
+	time.Sleep(time.Duration(sleep) * time.Second)
+	return api.waitUntilAllNodesReadyWithTimeout(instanceID, attempt, sleep, timeout)
+}
+
 func (api *API) waitUntilDeletion(instanceID string) error {
 	log.Printf("[DEBUG] go-api::instance::waitUntilDeletion waiting")
 	data := make(map[string]interface{})
