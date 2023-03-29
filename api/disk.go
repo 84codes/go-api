@@ -38,22 +38,20 @@ func (api *API) resizeDiskWithRetry(id string, params map[string]interface{}, at
 		}
 		return data, nil
 	case 400:
+		log.Printf("[DEBUG] go-api::resizeDisk::resizeDiskWithRetry failed: %v", failed)
 		switch {
 		case failed["error_code"] == nil:
 			break
-		case failed["error_code"].(float64) == 40002:
+		case failed["error_code"].(float64) == 40099:
+			log.Printf("[DEBUG] go-api::resizeDisk::resizeDiskWithRetry %s, will try again, attempt: %d, until "+
+				"timeout: %d", failed["error"].(string), attempt, (timeout - (attempt * sleep)))
+			attempt++
+			time.Sleep(time.Duration(sleep) * time.Second)
+			return api.resizeDiskWithRetry(id, params, attempt, sleep, timeout)
+		default:
 			return nil, fmt.Errorf("Resize disk failed: %s", failed["error"].(string))
-		case failed["error_code"].(float64) == 40003:
-			if failed["error"] == "Timeout talking to backend" {
-				log.Printf("[DEBUG] go-api::resizeDisk::resizeDiskWithRetry Timeout talking to backend, "+
-					" will try again, attempt: %d, until timeout: %d", attempt, (timeout - (attempt * sleep)))
-				attempt++
-				time.Sleep(time.Duration(sleep) * time.Second)
-				return api.resizeDiskWithRetry(id, params, attempt, sleep, timeout)
-			} else {
-				break
-			}
 		}
 	}
-	return nil, fmt.Errorf("Resize disk failed, status: %v, message: %s", response.StatusCode, failed["error"])
+	return nil, fmt.Errorf("Resize disk failed, status: %v, message: %s",
+		response.StatusCode, failed["error"].(string))
 }
