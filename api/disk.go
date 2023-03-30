@@ -28,7 +28,7 @@ func (api *API) resizeDiskWithRetry(id string, params map[string]interface{}, at
 	if err != nil {
 		return nil, err
 	} else if attempt*sleep > timeout {
-		return nil, fmt.Errorf("Wait until resize disk failed, reached timeout of %d seconds", timeout)
+		return nil, fmt.Errorf("Resize disk timeout reached after %d seconds", timeout)
 	}
 
 	switch response.StatusCode {
