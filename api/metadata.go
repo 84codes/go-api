@@ -15,6 +15,7 @@ type Region struct {
 	Region   string `json:"region"`
 }
 
+// ValidatePlan: Check with backend if plan is valid
 func (api *API) ValidatePlan(name string) error {
 	var (
 		data   []Plan
@@ -39,6 +40,46 @@ func (api *API) ValidatePlan(name string) error {
 	return fmt.Errorf("Subscription plan: %s is not valid", name)
 }
 
+// PlanTypes: Fetch if old/new plans are shared/dedicated
+func (api *API) PlanTypes(old, new string) (string, string) {
+	var (
+		data        []Plan
+		failed      map[string]interface{}
+		path        = fmt.Sprintf("api/plans")
+		oldPlanType string
+		newPlanType string
+	)
+
+	response, err := api.sling.New().Get(path).Receive(&data, &failed)
+	if err != nil {
+		fmt.Errorf("Error: %v", err)
+		return "", ""
+	}
+
+	if response.StatusCode != 200 {
+		fmt.Errorf("%s", failed["message"].(string))
+		return "", ""
+	}
+
+	for _, plan := range data {
+		if old == plan.Name {
+			oldPlanType = planType(plan.Shared)
+		} else if new == plan.Name {
+			newPlanType = planType(plan.Shared)
+		}
+	}
+	return oldPlanType, newPlanType
+}
+
+func planType(shared bool) string {
+	if shared {
+		return "shared"
+	} else {
+		return "dedicated"
+	}
+}
+
+// ValidateRegion: Check with backend if region is valid
 func (api *API) ValidateRegion(region string) error {
 	var (
 		data     []Region
