@@ -1,9 +1,19 @@
+## 1.12.0 (May 03, 2023)
+
+NOTES:
+
+* Bump go version from 1.17 to 1.20
+
+FEATURES:
+
+* api/metadata.go - Add new endpoints to support backend validation [#34](https://github.com/84codes/go-api/pull/34)
+
 ## 1.11.1 (Apr 03, 2023)
 
 IMPROVEMENTS:
 
 * api/disk.go - Add retry when polling for resize disk finished [#31](https://github.com/84codes/go-api/pull/31)
-* api/instance.go - Wait until nodes configured with timeout [#31](https://github.com/84codes/go-api/pull/31) 
+* api/instance.go - Wait until nodes configured with timeout [#31](https://github.com/84codes/go-api/pull/31)
 
 ## 1.11.0 (Mar 07, 2023)
 
