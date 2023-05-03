@@ -1,6 +1,6 @@
 module github.com/84codes/go-api
 
-go 1.17
+go 1.20
 
 require github.com/dghubble/sling v1.4.1
 
