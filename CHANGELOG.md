@@ -1,3 +1,9 @@
+## 1.12.1 (May 05, 2023)
+
+BUG FIXES:
+
+* api/metadata.go - Fix error response message for validation
+
 ## 1.12.0 (May 03, 2023)
 
 NOTES:
