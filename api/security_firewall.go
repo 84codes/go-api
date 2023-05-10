@@ -39,7 +39,7 @@ func (api *API) waitUntilFirewallConfigured(instanceID, attempt, sleep, timeout 
 
 func (api *API) CreateFirewallSettings(instanceID int, params []map[string]interface{}, sleep,
 	timeout int) ([]map[string]interface{}, error) {
-	attempt, err := api.createFirewallSettingsWithReply(instanceID, params, 1, sleep, timeout)
+	attempt, err := api.createFirewallSettingsWithRetry(instanceID, params, 1, sleep, timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (api *API) CreateFirewallSettings(instanceID int, params []map[string]inter
 	return api.ReadFirewallSettings(instanceID)
 }
 
-func (api *API) createFirewallSettingsWithReply(instanceID int, params []map[string]interface{},
+func (api *API) createFirewallSettingsWithRetry(instanceID int, params []map[string]interface{},
 	attempt, sleep, timeout int) (int, error) {
 	var (
 		failed map[string]interface{}
@@ -77,7 +77,7 @@ func (api *API) createFirewallSettingsWithReply(instanceID int, params []map[str
 				"attempt: %d, until timeout: %d", attempt, (timeout - (attempt * sleep)))
 			attempt++
 			time.Sleep(time.Duration(sleep) * time.Second)
-			return api.createFirewallSettingsWithReply(instanceID, params, attempt, sleep, timeout)
+			return api.createFirewallSettingsWithRetry(instanceID, params, attempt, sleep, timeout)
 		case failed["error_code"].(float64) == 40002:
 			return attempt, fmt.Errorf("Firewall rules validation failed due to: %s", failed["error"].(string))
 		}
