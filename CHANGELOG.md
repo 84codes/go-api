@@ -1,3 +1,9 @@
+## 1.12.x (Unreleased)
+
+IMPROVEMENTS:
+
+* api/security_firewall.go - Add retry when deleting firewall if firewalls not yet configure [#35](https://github.com/84codes/go-api/pull/35)
+
 ## 1.12.1 (May 05, 2023)
 
 BUG FIXES:
