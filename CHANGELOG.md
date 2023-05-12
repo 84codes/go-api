@@ -1,4 +1,4 @@
-## 1.12.x (Unreleased)
+## 1.12.2 (May 12, 2023)
 
 IMPROVEMENTS:
 
