@@ -104,6 +104,22 @@ func (api *API) ReadFirewallSettings(instanceID int) ([]map[string]interface{}, 
 	return nil, fmt.Errorf("ReadFirewallSettings failed, status: %v, message: %s", response.StatusCode, failed)
 }
 
+func (api *API) ReadFirewallRule(instanceID int, ip string) (map[string]interface{}, error) {
+	data, err := api.ReadFirewallSettings(instanceID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, dt := range data {
+		for k, v := range dt {
+			if k == "ip" && v == ip {
+				return dt, nil
+			}
+		}
+	}
+	return nil, fmt.Errorf("ReadFirewallRule rule with CIDR: %s not found", ip)
+}
+
 func (api *API) UpdateFirewallSettings(instanceID int, params []map[string]interface{},
 	sleep, timeout int) ([]map[string]interface{}, error) {
 	log.Printf("[DEBUG] go-api::security_firewall::update instance id: %v, params: %v, sleep: %d, timeout: %d",
