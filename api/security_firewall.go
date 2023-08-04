@@ -110,10 +110,10 @@ func (api *API) ReadFirewallRule(instanceID int, ip string) (map[string]interfac
 		return nil, err
 	}
 
-	for _, dt := range data {
-		for k, v := range dt {
+	for _, rule := range data {
+		for k, v := range rule {
 			if k == "ip" && v == ip {
-				return dt, nil
+				return rule, nil
 			}
 		}
 	}
