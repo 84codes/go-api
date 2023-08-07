@@ -38,16 +38,12 @@ func (api *API) waitUntilFirewallConfigured(instanceID, attempt, sleep, timeout 
 }
 
 func (api *API) CreateFirewallSettings(instanceID int, params []map[string]interface{}, sleep,
-	timeout int) ([]map[string]interface{}, error) {
+	timeout int) error {
 	attempt, err := api.createFirewallSettingsWithRetry(instanceID, params, 1, sleep, timeout)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	err = api.waitUntilFirewallConfigured(instanceID, attempt, sleep, timeout)
-	if err != nil {
-		return nil, err
-	}
-	return api.ReadFirewallSettings(instanceID)
+	return api.waitUntilFirewallConfigured(instanceID, attempt, sleep, timeout)
 }
 
 func (api *API) createFirewallSettingsWithRetry(instanceID int, params []map[string]interface{},
@@ -121,18 +117,14 @@ func (api *API) ReadFirewallRule(instanceID int, ip string) (map[string]interfac
 }
 
 func (api *API) UpdateFirewallSettings(instanceID int, params []map[string]interface{},
-	sleep, timeout int) ([]map[string]interface{}, error) {
+	sleep, timeout int) error {
 	log.Printf("[DEBUG] go-api::security_firewall::update instance id: %v, params: %v, sleep: %d, timeout: %d",
 		instanceID, params, sleep, timeout)
 	attempt, err := api.updateFirewallSettingsWithRetry(instanceID, params, 1, sleep, timeout)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	err = api.waitUntilFirewallConfigured(instanceID, attempt, sleep, timeout)
-	if err != nil {
-		return nil, err
-	}
-	return api.ReadFirewallSettings(instanceID)
+	return api.waitUntilFirewallConfigured(instanceID, attempt, sleep, timeout)
 }
 
 func (api *API) updateFirewallSettingsWithRetry(instanceID int, params []map[string]interface{},
