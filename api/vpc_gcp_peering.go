@@ -54,13 +54,15 @@ func (api *API) RequestVpcGcpPeering(instanceID int, params map[string]interface
 }
 
 func (api *API) ReadVpcGcpPeering(instanceID int, peerID string) (map[string]interface{}, error) {
-	data := make(map[string]interface{})
-	failed := make(map[string]interface{})
+	var (
+		data   map[string]interface{}
+		failed map[string]interface{}
+		path   = fmt.Sprintf("/api/instances/%v/vpc-peering", instanceID)
+	)
+
 	log.Printf("[DEBUG] go-api::vpc_gcp_peering::read instance_id: %v, peer_id: %v", instanceID, peerID)
-	path := fmt.Sprintf("/api/instances/%v/vpc-peering", instanceID)
 	response, err := api.sling.New().Get(path).Receive(&data, &failed)
 	log.Printf("[DEBUG] go-api::vpc_gcp_peering::read data: %v", data)
-
 	if err != nil {
 		return nil, err
 	}
@@ -76,11 +78,13 @@ func (api *API) UpdateVpcGcpPeering(instanceID int, peerID string) (map[string]i
 }
 
 func (api *API) RemoveVpcGcpPeering(instanceID int, peerID string) error {
-	failed := make(map[string]interface{})
-	log.Printf("[DEBUG] go-api::vpc_gcp_peering::remove instance id: %v, peering id: %v", instanceID, peerID)
-	path := fmt.Sprintf("/api/instances/%v/vpc-peering/%v", instanceID, peerID)
-	response, err := api.sling.New().Delete(path).Receive(nil, &failed)
+	var (
+		failed map[string]interface{}
+		path   = fmt.Sprintf("/api/instances/%v/vpc-peering/%v", instanceID, peerID)
+	)
 
+	log.Printf("[DEBUG] go-api::vpc_gcp_peering::remove instance id: %v, peering id: %v", instanceID, peerID)
+	response, err := api.sling.New().Delete(path).Receive(nil, &failed)
 	if err != nil {
 		return err
 	}
@@ -96,13 +100,15 @@ func (api *API) ReadVpcGcpInfo(instanceID int) (map[string]interface{}, error) {
 }
 
 func (api *API) readVpcGcpInfoWithRetry(instanceID, attempts, sleep int) (map[string]interface{}, error) {
-	data := make(map[string]interface{})
-	failed := make(map[string]interface{})
+	var (
+		data   map[string]interface{}
+		failed map[string]interface{}
+		path   = fmt.Sprintf("/api/instances/%v/vpc-peering/info", instanceID)
+	)
+
 	log.Printf("[DEBUG] go-api::vpc_gcp_peering::info instance id: %v", instanceID)
-	path := fmt.Sprintf("/api/instances/%v/vpc-peering/info", instanceID)
 	response, err := api.sling.New().Get(path).Receive(&data, &failed)
 	log.Printf("[DEBUG] go-api::vpc_gcp_peering::info data: %v", data)
-
 	if err != nil {
 		return nil, err
 	}
