@@ -31,13 +31,16 @@ func (api *API) waitForGcpPeeringStatusWithVpcId(vpcID, peerID string) error {
 	}
 }
 
-func (api *API) RequestVpcGcpPeeringWithVpcId(vpcID string, params map[string]interface{}) (map[string]interface{}, error) {
-	data := make(map[string]interface{})
-	failed := make(map[string]interface{})
-	log.Printf("[DEBUG] go-api::vpc_gcp_peering_withvpcid::request params: %v", params)
-	path := fmt.Sprintf("api/vpcs/%s/vpc-peering", vpcID)
-	response, err := api.sling.New().Post(path).BodyJSON(params).Receive(&data, &failed)
+func (api *API) RequestVpcGcpPeeringWithVpcId(vpcID string, params map[string]interface{},
+	waitOnStatus bool) (map[string]interface{}, error) {
+	var (
+		data   map[string]interface{}
+		failed map[string]interface{}
+		path   = fmt.Sprintf("api/vpcs/%s/vpc-peering", vpcID)
+	)
 
+	log.Printf("[DEBUG] go-api::vpc_gcp_peering_withvpcid::request params: %v", params)
+	response, err := api.sling.New().Post(path).BodyJSON(params).Receive(&data, &failed)
 	if err != nil {
 		return nil, err
 	}
@@ -45,8 +48,10 @@ func (api *API) RequestVpcGcpPeeringWithVpcId(vpcID string, params map[string]in
 		return nil, fmt.Errorf("request VPC peering failed, status: %v, message: %s", response.StatusCode, failed)
 	}
 
-	log.Printf("[DEBUG] go-api::vpc_gcp_peering_withvpcid::request waiting for active state")
-	api.waitForGcpPeeringStatusWithVpcId(vpcID, data["peering"].(string))
+	if waitOnStatus {
+		log.Printf("[DEBUG] go-api::vpc_gcp_peering_withvpcid::request waiting for active state")
+		api.waitForGcpPeeringStatusWithVpcId(vpcID, data["peering"].(string))
+	}
 	return data, nil
 }
 
