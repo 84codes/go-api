@@ -1,3 +1,10 @@
+## 1.13.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* api/vpc_gcp_peering.go - Configurable wait on GCP Peering status [#38](https://github.com/84codes/go-api/pull/38)
+* api/vpc_gcp_peering_withvpcid.go - Configurable wait on GCP Peering status [#38](https://github.com/84codes/go-api/pull/38)
+
 ## 1.12.3 (Sep 8, 2023)
 
 BUG FIXES:
