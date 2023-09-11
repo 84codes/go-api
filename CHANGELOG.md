@@ -1,3 +1,9 @@
+## 1.12.3 (Sep 8, 2023)
+
+BUG FIXES:
+
+* api/plugins.go - Don't wait on state change for required plugin [#37](https://github.com/84codes/go-api/pull/37)
+
 ## 1.12.2 (May 12, 2023)
 
 IMPROVEMENTS:
