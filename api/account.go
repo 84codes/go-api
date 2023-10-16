@@ -50,38 +50,48 @@ func (api *API) ListVpcs() ([]map[string]interface{}, error) {
 	return data, nil
 }
 
-func (api *API) RotatePassword(instanceID int) error {
+func (api *API) RotatePassword(instanceID int) (string, error) {
 	var (
+		data   map[string]interface{}
 		failed map[string]interface{}
 		path   = fmt.Sprintf("api/instances/%d/account/rotate-password", instanceID)
 	)
 
-	response, err := api.sling.New().Post(path).Receive(nil, &failed)
+	response, err := api.sling.New().Post(path).Receive(&data, &failed)
 	if err != nil {
-		return err
+		return "", err
 	}
-	if response.StatusCode != 204 {
-		return fmt.Errorf("failed to rotate password, statusCode: %v, failed: %v",
+
+	switch response.StatusCode {
+	case 200:
+		return data["result"].(string), nil
+	case 204:
+		return "", nil
+	default:
+		return "", fmt.Errorf("failed to rotate api key, statusCode: %v, failed: %v",
 			response.StatusCode, failed)
 	}
-
-	return nil
 }
 
-func (api *API) RotateApiKey(instanceID int) error {
+func (api *API) RotateApiKey(instanceID int) (string, error) {
 	var (
+		data   map[string]interface{}
 		failed map[string]interface{}
 		path   = fmt.Sprintf("api/instances/%d/account/rotate-apikey", instanceID)
 	)
 
-	response, err := api.sling.New().Post(path).Receive(nil, &failed)
+	response, err := api.sling.New().Post(path).Receive(&data, &failed)
 	if err != nil {
-		return err
-	}
-	if response.StatusCode != 204 {
-		return fmt.Errorf("failed to rotate api key, statusCode: %v, failed: %v",
-			response.StatusCode, failed)
+		return "", err
 	}
 
-	return nil
+	switch response.StatusCode {
+	case 200:
+		return data["result"].(string), nil
+	case 204:
+		return "", nil
+	default:
+		return "", fmt.Errorf("failed to rotate api key, statusCode: %v, failed: %v",
+			response.StatusCode, failed)
+	}
 }
