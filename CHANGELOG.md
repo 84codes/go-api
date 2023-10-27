@@ -1,8 +1,8 @@
-## 1.x.y (Unreleased)
+## 1.13.0 (Oct 27, 2023)
 
-IMPROVEMENTS:
+FEATURES:
 
-* api/account.go - Add endpoints to rotate password and API key [#39](https://github.com/84codes/go-api/pull/39)
+* api/account.go - Add new endpoints to rotate password and API key [#39](https://github.com/84codes/go-api/pull/39)
 
 ## 1.12.4 (Sep 13, 2023)
 
