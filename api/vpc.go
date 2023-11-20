@@ -84,13 +84,18 @@ func (api *API) ReadVpcInstance(vpcID string) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	if response.StatusCode != 200 {
-		return nil, fmt.Errorf("ReadVpcInstance failed, status: %v, message: %v", response.StatusCode, failed)
-	}
 
-	data_temp, _ := api.readVpcName(vpcID)
-	data["vpc_name"] = data_temp["name"]
-	return data, nil
+	switch response.StatusCode {
+	case 200:
+		data_temp, _ := api.readVpcName(vpcID)
+		data["vpc_name"] = data_temp["name"]
+		return data, nil
+	case 410:
+		return nil, nil
+	default:
+		return nil, fmt.Errorf("ReadVpcInstance failed, status: %v, message: %v",
+			response.StatusCode, failed)
+	}
 }
 
 func (api *API) UpdateVpcInstance(vpcID string, params map[string]interface{}) error {
@@ -114,13 +119,18 @@ func (api *API) DeleteVpcInstance(vpcID string) error {
 	log.Printf("[DEBUG] go-api::vpc::delete vpc ID: %s", vpcID)
 	path := fmt.Sprintf("api/vpcs/%s", vpcID)
 	response, err := api.sling.New().Delete(path).Receive(nil, &failed)
-
+	log.Printf("[DEBUG] go-api::vpc::delete vpc ID: %s, response: %v", vpcID, response.StatusCode)
 	if err != nil {
 		return err
 	}
-	if response.StatusCode != 204 {
+
+	switch response.StatusCode {
+	case 204:
+		return nil
+	case 410:
+		log.Printf("[WARN] go-api::vpc::delete status: 410, message: Gone")
+		return nil
+	default:
 		return fmt.Errorf("DeleteVpcInstance failed, status: %v, message: %v", response.StatusCode, failed)
 	}
-
-	return nil
 }

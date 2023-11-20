@@ -164,27 +164,39 @@ func (api *API) ReadInstance(instanceID string) (map[string]interface{}, error) 
 	if err != nil {
 		return nil, err
 	}
-	if response.StatusCode != 200 {
-		return nil, fmt.Errorf("ReadInstance failed, status: %v, message: %s", response.StatusCode, failed)
-	}
 
-	return data, nil
+	switch response.StatusCode {
+	case 200:
+		return data, nil
+	case 410:
+		log.Printf("[WARN] go-api::instance::read status: 410, message: Gone")
+		return nil, nil
+	default:
+		return nil, fmt.Errorf("ReadInstance failed, status: %v, message: %s",
+			response.StatusCode, failed)
+	}
 }
 
 func (api *API) ReadInstances() ([]map[string]interface{}, error) {
 	var data []map[string]interface{}
 	failed := make(map[string]interface{})
 	response, err := api.sling.New().Get("/api/instances").Receive(&data, &failed)
-	log.Printf("[DEBUG] go-api::instance::read data: %v", data)
+	log.Printf("[DEBUG] go-api::instance::list data: %v", data)
 
 	if err != nil {
 		return nil, err
 	}
-	if response.StatusCode != 200 {
-		return nil, fmt.Errorf("ReadInstances failed, status: %v, message: %s", response.StatusCode, failed)
-	}
 
-	return data, nil
+	switch response.StatusCode {
+	case 200:
+		return data, nil
+	case 410:
+		log.Printf("[WARN] go-api::instance::list status: 410, message: Gone")
+		return nil, nil
+	default:
+		return nil, fmt.Errorf("ReadInstances failed, status: %v, message: %s",
+			response.StatusCode, failed)
+	}
 }
 
 func (api *API) UpdateInstance(instanceID string, params map[string]interface{}) error {
@@ -212,11 +224,16 @@ func (api *API) DeleteInstance(instanceID string, keep_vpc bool) error {
 	if err != nil {
 		return err
 	}
-	if response.StatusCode != 204 {
+
+	switch response.StatusCode {
+	case 204:
+		return api.waitUntilDeletion(instanceID)
+	case 410:
+		log.Printf("[WARN] go-api::instance::delete status: 410, message: Gone")
+		return nil
+	default:
 		return fmt.Errorf("DeleteInstance failed, status: %v, message: %s", response.StatusCode, failed)
 	}
-
-	return api.waitUntilDeletion(instanceID)
 }
 
 func (api *API) UrlInformation(url string) map[string]interface{} {
