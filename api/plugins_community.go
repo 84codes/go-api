@@ -7,11 +7,14 @@ import (
 	"time"
 )
 
-func (api *API) waitUntilPluginUninstalled(instanceID int, pluginName string) (map[string]interface{}, error) {
-	log.Printf("[DEBUG] go-api::plugin_community::waitUntilPluginUninstalled instance id: %v, name: %v", instanceID, pluginName)
-	time.Sleep(10 * time.Second)
+// waitUntilPluginUninstalled wait until a community plugin been uninstalled.
+func (api *API) waitUntilPluginUninstalled(instanceID int, pluginName string, sleep, timeout int) (
+	map[string]interface{}, error) {
+
+	log.Printf("[DEBUG] go-api::plugin_community::waitUntilPluginUninstalled instance id: %v, name: %v",
+		instanceID, pluginName)
 	for {
-		response, err := api.ReadPlugin(instanceID, pluginName)
+		response, err := api.ReadPlugin(instanceID, pluginName, sleep, timeout)
 
 		if err != nil {
 			return nil, err
@@ -19,32 +22,39 @@ func (api *API) waitUntilPluginUninstalled(instanceID int, pluginName string) (m
 		if len(response) == 0 {
 			return response, nil
 		}
-
-		time.Sleep(10 * time.Second)
 	}
 }
 
-func (api *API) EnablePluginCommunity(instanceID int, pluginName string) (map[string]interface{}, error) {
-	failed := make(map[string]interface{})
-	params := &PluginParams{Name: pluginName}
-	log.Printf("[DEBUG] go-api::plugin_community::enable instance ID: %v, name: %v", instanceID, pluginName)
-	path := fmt.Sprintf("/api/instances/%d/plugins/community?async=true", instanceID)
+// InstallPlugin install a community plugin on an instance.
+func (api *API) InstallPluginCommunity(instanceID int, pluginName string, sleep, timeout int) (
+	map[string]interface{}, error) {
+
+	var (
+		failed map[string]interface{}
+		params = &PluginParams{Name: pluginName}
+		path   = fmt.Sprintf("/api/instances/%d/plugins/community?async=true", instanceID)
+	)
+
+	log.Printf("[DEBUG] go-api::plugin_community::enable path: %s", path)
 	response, err := api.sling.New().Post(path).BodyJSON(params).Receive(nil, &failed)
 
 	if err != nil {
 		return nil, err
 	}
 	if response.StatusCode != 204 {
-		return nil, fmt.Errorf("EnablePluginCommunity failed, status: %v, message: %s", response.StatusCode, failed)
+		return nil,
+			fmt.Errorf("EnablePluginCommunity failed, status: %v, message: %v", response.StatusCode, failed)
 	}
 
-	return api.waitUntilPluginChanged(instanceID, pluginName, true)
+	return api.waitUntilPluginChanged(instanceID, pluginName, true, sleep, timeout)
 }
 
-func (api *API) ReadPluginCommunity(instanceID int, pluginName string) (map[string]interface{}, error) {
-	var data []map[string]interface{}
+// ReadPlugin reads a specific community plugin from an instance.
+func (api *API) ReadPluginCommunity(instanceID int, pluginName string, sleep, timeout int) (
+	map[string]interface{}, error) {
+
 	log.Printf("[DEBUG] go-api::plugin_community::read instance ID: %v, name: %v", instanceID, pluginName)
-	data, err := api.ReadPluginsCommunity(instanceID)
+	data, err := api.ListPluginsCommunity(instanceID, sleep, timeout)
 
 	if err != nil {
 		return nil, err
@@ -60,69 +70,91 @@ func (api *API) ReadPluginCommunity(instanceID int, pluginName string) (map[stri
 	return nil, nil
 }
 
-func (api *API) ReadPluginsCommunity(instanceID int) ([]map[string]interface{}, error) {
-	// Initiale values, 5 attempts and 20 second sleep
-	return api.readPluginsCommunityWithRetry(instanceID, 5, 20)
+// ListPluginsCommunity list all community plugins for an instance.
+func (api *API) ListPluginsCommunity(instanceID, sleep, timeout int) ([]map[string]interface{}, error) {
+	return api.listPluginsCommunityWithRetry(instanceID, 1, sleep, timeout)
 }
 
-func (api *API) readPluginsCommunityWithRetry(instanceID, attempts, sleep int) ([]map[string]interface{}, error) {
-	var data []map[string]interface{}
-	failed := make(map[string]interface{})
-	log.Printf("[DEBUG] go-api::plugin_community::readPluginsCommunityWithRetry instance id: %v", instanceID)
-	path := fmt.Sprintf("/api/instances/%d/plugins/community", instanceID)
+// listPluginsCommunityWithRetry list all community plugins for an instance,
+// with retry if the backend is busy.
+func (api *API) listPluginsCommunityWithRetry(instanceID, attempt, sleep, timeout int) (
+	[]map[string]interface{}, error) {
+
+	var (
+		data   []map[string]interface{}
+		failed map[string]interface{}
+		path   = fmt.Sprintf("/api/instances/%d/plugins/community", instanceID)
+	)
+
+	log.Printf("[DEBUG] go-api::plugin_community::listPluginsCommunityWithRetry path: %s", path)
 	response, err := api.sling.New().Get(path).Receive(&data, &failed)
 
 	if err != nil {
 		return nil, err
+	} else if attempt*sleep > timeout {
+		return nil, fmt.Errorf("read plugins reached timeout of %d seconds", timeout)
 	}
 
 	statusCode := response.StatusCode
-	log.Printf("[DEBUG] go-api::plugin_community::readPluginsCommunityWithRetry statusCode: %d", statusCode)
+	log.Printf("[DEBUG] go-api::plugin_community::listPluginsCommunityWithRetry statusCode: %d", statusCode)
 	switch {
 	case statusCode == 400:
 		if strings.Compare(failed["error"].(string), "Timeout talking to backend") == 0 {
-			if attempts--; attempts > 0 {
-				log.Printf("[INFO] go-api::plugin_community::readPluginsCommunityWithRetry Timeout talking to backend "+
-					"attempts left %d and retry in %d seconds", attempts, sleep)
-				time.Sleep(time.Duration(sleep) * time.Second)
-				return api.readPluginsCommunityWithRetry(instanceID, attempts, 2*sleep)
-			} else {
-				return nil, fmt.Errorf("ReadWithRetry failed, status: %v, message: %s", response.StatusCode, failed)
-			}
+			log.Printf("[INFO] go-api::plugins-community::read Timeout talking to backend "+
+				"attempt: %d, until timeout: %d", attempt, (timeout - (attempt * sleep)))
+			attempt++
+			time.Sleep(time.Duration(sleep) * time.Second)
+			return api.listPluginsCommunityWithRetry(instanceID, attempt, sleep, timeout)
 		}
 	}
 	return data, nil
 }
 
-func (api *API) UpdatePluginCommunity(instanceID int, params map[string]interface{}) (map[string]interface{}, error) {
-	failed := make(map[string]interface{})
-	pluginParams := &PluginParams{Name: params["name"].(string), Enabled: params["enabled"].(bool)}
-	log.Printf("[DEBUG] go-api::plugin_community::update instance ID: %v, params: %v", instanceID, params)
-	path := fmt.Sprintf("/api/instances/%d/plugins/community?async=true", instanceID)
+// UpdatePluginCommunity updates a community plugin from an instance.
+func (api *API) UpdatePluginCommunity(instanceID int, params map[string]interface{}, sleep, timeout int) (
+	map[string]interface{}, error) {
+
+	var (
+		failed       map[string]interface{}
+		pluginName   = params["name"].(string)
+		enabled      = params["enabled"].(bool)
+		pluginParams = &PluginParams{Name: pluginName, Enabled: enabled}
+		path         = fmt.Sprintf("/api/instances/%d/plugins/community?async=true", instanceID)
+	)
+
+	log.Printf("[DEBUG] go-api::plugin_community::update path: %s", path)
 	response, err := api.sling.New().Put(path).BodyJSON(pluginParams).Receive(nil, &failed)
 
 	if err != nil {
 		return nil, err
 	}
 	if response.StatusCode != 204 {
-		return nil, fmt.Errorf("UpdatePluginCommunity failed, status: %v, message: %s", response.StatusCode, failed)
+		return nil,
+			fmt.Errorf("UpdatePluginCommunity failed, status: %v, message: %s", response.StatusCode, failed)
 	}
 
-	return api.waitUntilPluginChanged(instanceID, params["name"].(string), params["enabled"].(bool))
+	return api.waitUntilPluginChanged(instanceID, pluginName, enabled, sleep, timeout)
 }
 
-func (api *API) DisablePluginCommunity(instanceID int, pluginName string) (map[string]interface{}, error) {
-	failed := make(map[string]interface{})
-	log.Printf("[DEBUG] go-api::plugin_community::disable instance ID: %v, name: %v", instanceID, pluginName)
-	path := fmt.Sprintf("/api/instances/%d/plugins/community/%s?async=true", instanceID, pluginName)
+// UninstallPluginCommunity uninstall a community plugin from an instance.
+func (api *API) UninstallPluginCommunity(instanceID int, pluginName string, sleep, timeout int) (
+	map[string]interface{}, error) {
+
+	var (
+		failed = make(map[string]interface{})
+		path   = fmt.Sprintf("/api/instances/%d/plugins/community/%s?async=true", instanceID, pluginName)
+	)
+
+	log.Printf("[DEBUG] go-api::plugin_community::disable path: %s", path)
 	response, err := api.sling.New().Delete(path).Receive(nil, &failed)
 
 	if err != nil {
 		return nil, err
 	}
 	if response.StatusCode != 204 {
-		return nil, fmt.Errorf("DisablePluginCommunity failed, status: %v, message: %s", response.StatusCode, failed)
+		return nil,
+			fmt.Errorf("DisablePluginCommunity failed, status: %v, message: %s", response.StatusCode, failed)
 	}
 
-	return api.waitUntilPluginUninstalled(instanceID, pluginName)
+	return api.waitUntilPluginUninstalled(instanceID, pluginName, sleep, timeout)
 }
