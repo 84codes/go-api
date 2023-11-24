@@ -7,16 +7,12 @@ import (
 	"time"
 )
 
-type PluginParams struct {
-	Name    string `json:"plugin_name,omitempty"`
-	Enabled bool   `json:"enabled,omitempty"`
-}
-
 // waitUntilPluginChanged wait until plugin changed.
 func (api *API) waitUntilPluginChanged(instanceID int, pluginName string, enabled bool,
 	sleep, timeout int) (map[string]interface{}, error) {
 
 	for {
+		time.Sleep(time.Duration(sleep) * time.Second)
 		response, err := api.ReadPlugin(instanceID, pluginName, sleep, timeout)
 		log.Printf("[DEBUG] go-api::plugin::waitUntilPluginChanged response: %v", response)
 		if err != nil {
@@ -36,12 +32,13 @@ func (api *API) EnablePlugin(instanceID int, pluginName string, sleep, timeout i
 	map[string]interface{}, error) {
 
 	var (
-		failed = make(map[string]interface{})
-		params = &PluginParams{Name: pluginName}
+		failed map[string]interface{}
+		params = make(map[string]interface{})
 		path   = fmt.Sprintf("/api/instances/%d/plugins?async=true", instanceID)
 	)
 
-	log.Printf("[DEBUG] go-api::plugin::enable instance id: %v, params: %v", instanceID, pluginName)
+	params["plugin_name"] = pluginName
+	log.Printf("[DEBUG] go-api::plugin::enable instance id: %v, params: %v", instanceID, params)
 	response, err := api.sling.New().Post(path).BodyJSON(params).Receive(nil, &failed)
 
 	if err != nil {
@@ -116,19 +113,19 @@ func (api *API) listPluginsWithRetry(instanceID, attempt, sleep, timeout int) (
 }
 
 // UpdatePlugin updates a plugin from an instance.
-func (api *API) UpdatePlugin(instanceID int, params map[string]interface{}, sleep, timeout int) (
+func (api *API) UpdatePlugin(instanceID int, pluginName string, enabled bool, sleep, timeout int) (
 	map[string]interface{}, error) {
 
 	var (
-		failed       map[string]interface{}
-		pluginName   = params["name"].(string)
-		enabled      = params["enabled"].(bool)
-		pluginParams = &PluginParams{Name: pluginName, Enabled: enabled}
-		path         = fmt.Sprintf("/api/instances/%d/plugins?async=true", instanceID)
+		failed map[string]interface{}
+		params = make(map[string]interface{})
+		path   = fmt.Sprintf("/api/instances/%d/plugins?async=true", instanceID)
 	)
 
-	log.Printf("[DEBUG] go-api::plugin::update instance ID: %v, params: %v", instanceID, pluginParams)
-	response, err := api.sling.New().Put(path).BodyJSON(pluginParams).Receive(nil, &failed)
+	params["plugin_name"] = pluginName
+	params["enabled"] = enabled
+	log.Printf("[DEBUG] go-api::plugin::update instance ID: %v, params: %v", instanceID, params)
+	response, err := api.sling.New().Put(path).BodyJSON(params).Receive(nil, &failed)
 
 	if err != nil {
 		return nil, err

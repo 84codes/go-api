@@ -14,6 +14,7 @@ func (api *API) waitUntilPluginUninstalled(instanceID int, pluginName string, sl
 	log.Printf("[DEBUG] go-api::plugin_community::waitUntilPluginUninstalled instance id: %v, name: %v",
 		instanceID, pluginName)
 	for {
+		time.Sleep(time.Duration(sleep) * time.Second)
 		response, err := api.ReadPlugin(instanceID, pluginName, sleep, timeout)
 
 		if err != nil {
@@ -31,10 +32,11 @@ func (api *API) InstallPluginCommunity(instanceID int, pluginName string, sleep,
 
 	var (
 		failed map[string]interface{}
-		params = &PluginParams{Name: pluginName}
+		params = make(map[string]interface{})
 		path   = fmt.Sprintf("/api/instances/%d/plugins/community?async=true", instanceID)
 	)
 
+	params["plugin_name"] = pluginName
 	log.Printf("[DEBUG] go-api::plugin_community::enable path: %s", path)
 	response, err := api.sling.New().Post(path).BodyJSON(params).Receive(nil, &failed)
 
@@ -111,19 +113,19 @@ func (api *API) listPluginsCommunityWithRetry(instanceID, attempt, sleep, timeou
 }
 
 // UpdatePluginCommunity updates a community plugin from an instance.
-func (api *API) UpdatePluginCommunity(instanceID int, params map[string]interface{}, sleep, timeout int) (
+func (api *API) UpdatePluginCommunity(instanceID int, pluginName string, enabled bool, sleep, timeout int) (
 	map[string]interface{}, error) {
 
 	var (
-		failed       map[string]interface{}
-		pluginName   = params["name"].(string)
-		enabled      = params["enabled"].(bool)
-		pluginParams = &PluginParams{Name: pluginName, Enabled: enabled}
-		path         = fmt.Sprintf("/api/instances/%d/plugins/community?async=true", instanceID)
+		failed map[string]interface{}
+		params = make(map[string]interface{})
+		path   = fmt.Sprintf("/api/instances/%d/plugins/community?async=true", instanceID)
 	)
 
+	params["plugin_name"] = pluginName
+	params["enabled"] = enabled
 	log.Printf("[DEBUG] go-api::plugin_community::update path: %s", path)
-	response, err := api.sling.New().Put(path).BodyJSON(pluginParams).Receive(nil, &failed)
+	response, err := api.sling.New().Put(path).BodyJSON(params).Receive(nil, &failed)
 
 	if err != nil {
 		return nil, err
@@ -141,7 +143,7 @@ func (api *API) UninstallPluginCommunity(instanceID int, pluginName string, slee
 	map[string]interface{}, error) {
 
 	var (
-		failed = make(map[string]interface{})
+		failed map[string]interface{}
 		path   = fmt.Sprintf("/api/instances/%d/plugins/community/%s?async=true", instanceID, pluginName)
 	)
 
