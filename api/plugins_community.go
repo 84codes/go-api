@@ -51,7 +51,7 @@ func (api *API) InstallPluginCommunity(instanceID int, pluginName string, sleep,
 	return api.waitUntilPluginChanged(instanceID, pluginName, true, sleep, timeout)
 }
 
-// ReadPlugin reads a specific community plugin from an instance.
+// ReadPluginCommunity reads a specific community plugin from an instance.
 func (api *API) ReadPluginCommunity(instanceID int, pluginName string, sleep, timeout int) (
 	map[string]interface{}, error) {
 
