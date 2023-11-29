@@ -91,6 +91,7 @@ func (api *API) ReadVpcInstance(vpcID string) (map[string]interface{}, error) {
 		data["vpc_name"] = data_temp["name"]
 		return data, nil
 	case 410:
+		log.Printf("[WARN] go-api::vpc::read status: 410, message: The VPC has been deleted")
 		return nil, nil
 	default:
 		return nil, fmt.Errorf("ReadVpcInstance failed, status: %v, message: %v",
@@ -103,15 +104,20 @@ func (api *API) UpdateVpcInstance(vpcID string, params map[string]interface{}) e
 	log.Printf("[DEBUG] go-api::instance::update vpc ID: %s, params: %v", vpcID, params)
 	path := fmt.Sprintf("api/vpcs/%s", vpcID)
 	response, err := api.sling.New().Put(path).BodyJSON(params).Receive(nil, &failed)
-
 	if err != nil {
 		return err
 	}
-	if response.StatusCode != 200 {
-		return fmt.Errorf("UpdateInstance failed, status: %v, message: %v", response.StatusCode, failed)
-	}
 
-	return nil
+	switch response.StatusCode {
+	case 200:
+		return nil
+	case 410:
+		log.Printf("[WARN] go-api::vpc::update status: 410, message: The VPC has been deleted")
+		return nil
+	default:
+		return fmt.Errorf("UpdateInstance failed, status: %v, message: %v",
+			response.StatusCode, failed)
+	}
 }
 
 func (api *API) DeleteVpcInstance(vpcID string) error {
@@ -128,9 +134,10 @@ func (api *API) DeleteVpcInstance(vpcID string) error {
 	case 204:
 		return nil
 	case 410:
-		log.Printf("[WARN] go-api::vpc::delete status: 410, message: Gone")
+		log.Printf("[WARN] go-api::vpc::delete status: 410, message: The VPC has been deleted")
 		return nil
 	default:
-		return fmt.Errorf("DeleteVpcInstance failed, status: %v, message: %v", response.StatusCode, failed)
+		return fmt.Errorf("DeleteVpcInstance failed, status: %v, message: %v",
+			response.StatusCode, failed)
 	}
 }

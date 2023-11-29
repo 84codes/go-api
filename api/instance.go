@@ -169,7 +169,7 @@ func (api *API) ReadInstance(instanceID string) (map[string]interface{}, error) 
 	case 200:
 		return data, nil
 	case 410:
-		log.Printf("[WARN] go-api::instance::read status: 410, message: Gone")
+		log.Printf("[WARN] go-api::instance::read status: 410, message: The instance has been deleted")
 		return nil, nil
 	default:
 		return nil, fmt.Errorf("ReadInstance failed, status: %v, message: %s",
@@ -191,7 +191,7 @@ func (api *API) ReadInstances() ([]map[string]interface{}, error) {
 	case 200:
 		return data, nil
 	case 410:
-		log.Printf("[WARN] go-api::instance::list status: 410, message: Gone")
+		log.Printf("[WARN] go-api::instance::list status: 410, message: The instance has been deleted")
 		return nil, nil
 	default:
 		return nil, fmt.Errorf("ReadInstances failed, status: %v, message: %s",
@@ -204,15 +204,20 @@ func (api *API) UpdateInstance(instanceID string, params map[string]interface{})
 	log.Printf("[DEBUG] go-api::instance::update instance ID: %v, params: %v", instanceID, params)
 	path := fmt.Sprintf("api/instances/%v", instanceID)
 	response, err := api.sling.New().Put(path).BodyJSON(params).Receive(nil, &failed)
-
 	if err != nil {
 		return err
 	}
-	if response.StatusCode != 200 {
-		return fmt.Errorf("UpdateInstance failed, status: %v, message: %s", response.StatusCode, failed)
-	}
 
-	return api.waitUntilAllNodesReady(instanceID)
+	switch response.StatusCode {
+	case 200:
+		return api.waitUntilAllNodesReady(instanceID)
+	case 410:
+		log.Printf("[WARN] go-api::instance::update status: 410, message: The instance has been deleted")
+		return nil
+	default:
+		return fmt.Errorf("UpdateInstance failed, status: %v, message: %s",
+			response.StatusCode, failed)
+	}
 }
 
 func (api *API) DeleteInstance(instanceID string, keep_vpc bool) error {
@@ -229,10 +234,11 @@ func (api *API) DeleteInstance(instanceID string, keep_vpc bool) error {
 	case 204:
 		return api.waitUntilDeletion(instanceID)
 	case 410:
-		log.Printf("[WARN] go-api::instance::delete status: 410, message: Gone")
+		log.Printf("[WARN] go-api::instance::delete status: 410, message: The instance has been deleted")
 		return nil
 	default:
-		return fmt.Errorf("DeleteInstance failed, status: %v, message: %s", response.StatusCode, failed)
+		return fmt.Errorf("DeleteInstance failed, status: %v, message: %s",
+			response.StatusCode, failed)
 	}
 }
 
