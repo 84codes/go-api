@@ -122,33 +122,6 @@ func (api *API) waitUntilDeletion(instanceID string) error {
 	}
 }
 
-func (api *API) numberOfNodes(instanceID string) (int, error) {
-	var (
-		data   map[string]interface{}
-		failed map[string]interface{}
-		path   = fmt.Sprintf("api/instances/%v/nodes", instanceID)
-	)
-
-	response, err := api.sling.New().Path(path).Receive(&data, &failed)
-	log.Printf("[DEBUG] go-api::instances::numberOfNodes data: %v", data)
-	if err != nil {
-		return -1, err
-	}
-
-	switch response.StatusCode {
-	case 200:
-		if data["nodes"] == nil {
-			log.Printf("[ERROR] go-api::instances::numberOfNodes is nil")
-			return -1, fmt.Errorf("go-api::instances::numberOfNodes is nil")
-		}
-		nodes, _ := strconv.Atoi(data["nodes"].(string))
-		return nodes, nil
-	default:
-		return -1, fmt.Errorf("go-api::instances::numberOfNodes failed, status: %v, message: %v",
-			response.StatusCode, failed)
-	}
-}
-
 func (api *API) CreateInstance(params map[string]interface{}) (map[string]interface{}, error) {
 	var (
 		data   map[string]interface{}
