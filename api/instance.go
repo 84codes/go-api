@@ -113,9 +113,11 @@ func (api *API) waitUntilDeletion(instanceID string) error {
 			return err
 		}
 
-		// TODO: Check how this works with the new API and will a change to 410 be an issue for
-		// older versions.
-		if response.StatusCode == 404 {
+		switch response.StatusCode {
+		case 404:
+			log.Print("[DEBUG] go-api::instance::waitUntilDeletion deleted")
+			return nil
+		case 410:
 			log.Print("[DEBUG] go-api::instance::waitUntilDeletion deleted")
 			return nil
 		}
@@ -239,7 +241,6 @@ func (api *API) DeleteInstance(instanceID string, keep_vpc bool) error {
 
 	switch response.StatusCode {
 	case 204:
-		// TODO: Check how this are affected by the new API and will a change to 410 be an issue for older versions?
 		return api.waitUntilDeletion(instanceID)
 	case 410:
 		log.Printf("[WARN] go-api::instance::delete status: 410, message: The instance has been deleted")
