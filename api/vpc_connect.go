@@ -26,9 +26,10 @@ func (api *API) EnableVpcConnect(instanceID int, params map[string][]interface{}
 		return err
 	}
 
-	if response.StatusCode == 204 {
+	switch response.StatusCode {
+	case 204:
 		return api.waitForEnableVpcConnectWithRetry(instanceID, 1, sleep, timeout)
-	} else {
+	default:
 		return fmt.Errorf("enable VPC Connect failed, status: %v, message: %s",
 			response.StatusCode, failed)
 	}
@@ -47,9 +48,10 @@ func (api *API) ReadVpcConnect(instanceID int) (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	if response.StatusCode == 200 {
+	switch response.StatusCode {
+	case 200:
 		return data, nil
-	} else {
+	default:
 		return nil, fmt.Errorf("read VPC Connect failed, status: %v, message: %s",
 			response.StatusCode, failed)
 	}
@@ -67,9 +69,10 @@ func (api *API) UpdateVpcConnect(instanceID int, params map[string][]interface{}
 		return err
 	}
 
-	if response.StatusCode == 204 {
+	switch response.StatusCode {
+	case 204:
 		return nil
-	} else {
+	default:
 		return fmt.Errorf("update VPC connect failed, status: %v, message: %s",
 			response.StatusCode, failed)
 	}
@@ -87,9 +90,10 @@ func (api *API) DisableVpcConnect(instanceID int) error {
 		return err
 	}
 
-	if response.StatusCode == 204 {
+	switch response.StatusCode {
+	case 204:
 		return nil
-	} else {
+	default:
 		return fmt.Errorf("disable VPC Connect failed, status: %v, message: %s",
 			response.StatusCode, failed)
 	}
