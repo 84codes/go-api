@@ -148,10 +148,11 @@ func (api *API) EnableVPC(instanceID int) error {
 			return err
 		}
 
-		if response.StatusCode == 200 {
+		switch response.StatusCode {
+		case 200:
 			log.Printf("[DEBUG] VPC-Connect: VPC features enabled")
 			return nil
-		} else {
+		default:
 			return fmt.Errorf("enable VPC failed, status: %v, message: %s",
 				response.StatusCode, failed)
 		}
