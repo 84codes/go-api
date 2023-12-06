@@ -32,48 +32,65 @@ func (api *API) waitForGcpPeeringStatusWithVpcId(vpcID, peerID string) error {
 }
 
 func (api *API) RequestVpcGcpPeeringWithVpcId(vpcID string, params map[string]interface{},
-	waitOnStatus bool) (map[string]interface{}, error) {
-	var (
-		data   map[string]interface{}
-		failed map[string]interface{}
-		path   = fmt.Sprintf("api/vpcs/%s/vpc-peering", vpcID)
-	)
+	waitOnStatus bool, sleep, timeout int) (map[string]interface{}, error) {
 
-	log.Printf("[DEBUG] go-api::vpc_gcp_peering_withvpcid::request params: %v", params)
-	response, err := api.sling.New().Post(path).BodyJSON(params).Receive(&data, &failed)
+	path := fmt.Sprintf("api/vpcs/%s/vpc-peering", vpcID)
+	data, err := api.requestVpcGcpPeeringWithRetry(path, params, waitOnStatus, 1, sleep, timeout)
 	if err != nil {
 		return nil, err
-	}
-	if response.StatusCode != 200 {
-		return nil, fmt.Errorf("request VPC peering failed, status: %v, message: %s", response.StatusCode, failed)
 	}
 
 	if waitOnStatus {
 		log.Printf("[DEBUG] go-api::vpc_gcp_peering_withvpcid::request waiting for active state")
 		api.waitForGcpPeeringStatusWithVpcId(vpcID, data["peering"].(string))
 	}
-	return data, nil
-}
-
-func (api *API) ReadVpcGcpPeeringWithVpcId(vpcID, peerID string) (map[string]interface{}, error) {
-	var (
-		data   map[string]interface{}
-		failed map[string]interface{}
-		path   = fmt.Sprintf("/api/vpcs/%s/vpc-peering", vpcID)
-	)
-
-	log.Printf("[DEBUG] go-api::vpc_gcp_peering_withvpcid::read instance_id: %s, peer_id: %s", vpcID, peerID)
-	response, err := api.sling.New().Get(path).Receive(&data, &failed)
-	log.Printf("[DEBUG] go-api::vpc_gcp_peering_withvpcid::read data: %v", data)
-	if err != nil {
-		return nil, err
-	}
-	if response.StatusCode != 200 {
-		return nil, fmt.Errorf("ReadRequest failed, status: %v, message: %s", response.StatusCode, failed)
-	}
 
 	return data, nil
 }
+
+// func (api *API) RequestVpcGcpPeeringWithVpcId(vpcID string, params map[string]interface{},
+// 	waitOnStatus bool) (map[string]interface{}, error) {
+// 	var (
+// 		data   map[string]interface{}
+// 		failed map[string]interface{}
+// 		path   = fmt.Sprintf("api/vpcs/%s/vpc-peering", vpcID)
+// 	)
+
+// 	log.Printf("[DEBUG] go-api::vpc_gcp_peering_withvpcid::request params: %v", params)
+// 	response, err := api.sling.New().Post(path).BodyJSON(params).Receive(&data, &failed)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	if response.StatusCode != 200 {
+// 		return nil, fmt.Errorf("request VPC peering failed, status: %v, message: %s", response.StatusCode, failed)
+// 	}
+
+// 	if waitOnStatus {
+// 		log.Printf("[DEBUG] go-api::vpc_gcp_peering_withvpcid::request waiting for active state")
+// 		api.waitForGcpPeeringStatusWithVpcId(vpcID, data["peering"].(string))
+// 	}
+// 	return data, nil
+// }
+
+// func (api *API) ReadVpcGcpPeeringWithVpcId(vpcID, peerID string) (map[string]interface{}, error) {
+// 	var (
+// 		data   map[string]interface{}
+// 		failed map[string]interface{}
+// 		path   = fmt.Sprintf("/api/vpcs/%s/vpc-peering", vpcID)
+// 	)
+
+// 	log.Printf("[DEBUG] go-api::vpc_gcp_peering_withvpcid::read instance_id: %s, peer_id: %s", vpcID, peerID)
+// 	response, err := api.sling.New().Get(path).Receive(&data, &failed)
+// 	log.Printf("[DEBUG] go-api::vpc_gcp_peering_withvpcid::read data: %v", data)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	if response.StatusCode != 200 {
+// 		return nil, fmt.Errorf("ReadRequest failed, status: %v, message: %s", response.StatusCode, failed)
+// 	}
+
+// 	return data, nil
+// }
 
 func (api *API) UpdateVpcGcpPeeringWithVpcId(vpcID, peerID string) (map[string]interface{}, error) {
 	return api.ReadVpcGcpPeeringWithVpcId(vpcID, peerID)
@@ -96,7 +113,7 @@ func (api *API) RemoveVpcGcpPeeringWithVpcId(vpcID, peerID string) error {
 	return nil
 }
 
-func (api *API) ReadVpcGcpInfoWithVpcId(vpcID string) (map[string]interface{}, error) {
+func (api *API) ReadVpcGcpInfoWithVpcId(vpcID string, sleep, timeout int) (map[string]interface{}, error) {
 	// Initiale values, 5 attempts and 20 second sleep
 	return api.readVpcGcpInfoWithRetryWithVpcId(vpcID, 5, 20)
 }
