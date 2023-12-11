@@ -1,3 +1,9 @@
+## 1.14.0 (Unreleased)
+
+FEATURES:
+
+* api/vpc-connect.go - Add new endpoint for `vpc-connect` [#41](https://github.com/84codes/go-api/pull/41)
+
 ## 1.13.0 (Oct 27, 2023)
 
 FEATURES:
