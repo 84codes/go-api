@@ -1,3 +1,14 @@
+## 1.14.0 (Unreleased)
+
+FEATURES:
+
+* api/vpc-connect.go - Add new endpoint for `vpc-connect` [#41](https://github.com/84codes/go-api/pull/41)
+
+IMPROVEMENTS:
+
+* api/instance.go - Prepare to handle gone instance resource [#42](https://github.com/84codes/go-api/pull/42)
+* api/vpc.go - Handle gone VPC resource [#42](https://github.com/84codes/go-api/pull/42)
+
 ## 1.13.0 (Oct 27, 2023)
 
 FEATURES:
