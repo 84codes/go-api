@@ -7,27 +7,7 @@ import (
 	"time"
 )
 
-// waitUntilPluginChanged wait until plugin changed.
-func (api *API) waitUntilPluginChanged(instanceID int, pluginName string, enabled bool,
-	sleep, timeout int) (map[string]interface{}, error) {
-
-	for {
-		time.Sleep(time.Duration(sleep) * time.Second)
-		response, err := api.ReadPlugin(instanceID, pluginName, sleep, timeout)
-		log.Printf("[DEBUG] go-api::plugin::waitUntilPluginChanged response: %v", response)
-		if err != nil {
-			return nil, err
-		}
-		if response["required"] != nil && response["required"] != false {
-			return response, nil
-		}
-		if response["enabled"] == enabled {
-			return response, nil
-		}
-	}
-}
-
-// EnablePlugin enable a plugin on an instance.
+// EnablePlugin: enable a plugin on an instance.
 func (api *API) EnablePlugin(instanceID int, pluginName string, sleep, timeout int) (
 	map[string]interface{}, error) {
 
@@ -44,15 +24,17 @@ func (api *API) EnablePlugin(instanceID int, pluginName string, sleep, timeout i
 	if err != nil {
 		return nil, err
 	}
-	if response.StatusCode != 204 {
-		return nil,
-			fmt.Errorf("EnablePlugin failed, status: %v, message: %s", response.StatusCode, failed)
-	}
 
-	return api.waitUntilPluginChanged(instanceID, pluginName, true, sleep, timeout)
+	switch response.StatusCode {
+	case 204:
+		return api.waitUntilPluginChanged(instanceID, pluginName, true, 1, sleep, timeout)
+	default:
+		return nil,
+			fmt.Errorf("enable plugin failed, status: %v, message: %s", response.StatusCode, failed)
+	}
 }
 
-// ReadPlugin reads a specific plugin from an instance.
+// ReadPlugin: reads a specific plugin from an instance.
 func (api *API) ReadPlugin(instanceID int, pluginName string, sleep, timeout int) (
 	map[string]interface{}, error) {
 
@@ -72,12 +54,12 @@ func (api *API) ReadPlugin(instanceID int, pluginName string, sleep, timeout int
 	return nil, nil
 }
 
-// ListPlugins list plugins from an instance.
+// ListPlugins: list plugins from an instance.
 func (api *API) ListPlugins(instanceID, sleep, timeout int) ([]map[string]interface{}, error) {
 	return api.listPluginsWithRetry(instanceID, 1, sleep, timeout)
 }
 
-// listPluginsWithRetry list plugins from an instance, with retry if backend is busy.
+// listPluginsWithRetry: list plugins from an instance, with retry if backend is busy.
 func (api *API) listPluginsWithRetry(instanceID, attempt, sleep, timeout int) (
 	[]map[string]interface{}, error) {
 
@@ -108,11 +90,12 @@ func (api *API) listPluginsWithRetry(instanceID, attempt, sleep, timeout int) (
 		return nil, fmt.Errorf("ReadWithRetry failed, status: %v, message: %s", 400, failed)
 	default:
 		return nil,
-			fmt.Errorf("ReadWithRetry failed, status: %v, message: %s", response.StatusCode, failed)
+			fmt.Errorf("list plugin with retry failed, status: %v, message: %s",
+				response.StatusCode, failed)
 	}
 }
 
-// UpdatePlugin updates a plugin from an instance.
+// UpdatePlugin: updates a plugin from an instance.
 func (api *API) UpdatePlugin(instanceID int, pluginName string, enabled bool, sleep, timeout int) (
 	map[string]interface{}, error) {
 
@@ -130,15 +113,17 @@ func (api *API) UpdatePlugin(instanceID int, pluginName string, enabled bool, sl
 	if err != nil {
 		return nil, err
 	}
-	if response.StatusCode != 204 {
-		return nil,
-			fmt.Errorf("UpdatePlugin failed, status: %v, message: %s", response.StatusCode, failed)
-	}
 
-	return api.waitUntilPluginChanged(instanceID, pluginName, enabled, sleep, timeout)
+	switch response.StatusCode {
+	case 204:
+		return api.waitUntilPluginChanged(instanceID, pluginName, enabled, 1, sleep, timeout)
+	default:
+		return nil,
+			fmt.Errorf("update plugin failed, status: %v, message: %s", response.StatusCode, failed)
+	}
 }
 
-// DisablePlugin disables a plugin from an instance.
+// DisablePlugin: disables a plugin from an instance.
 func (api *API) DisablePlugin(instanceID int, pluginName string, sleep, timeout int) (
 	map[string]interface{}, error) {
 
@@ -153,14 +138,17 @@ func (api *API) DisablePlugin(instanceID int, pluginName string, sleep, timeout 
 	if err != nil {
 		return nil, err
 	}
-	if response.StatusCode != 204 {
-		return nil, fmt.Errorf("DisablePlugin failed, status: %v, message: %s", response.StatusCode, failed)
-	}
 
-	return api.waitUntilPluginChanged(instanceID, pluginName, false, sleep, timeout)
+	switch response.StatusCode {
+	case 204:
+		return api.waitUntilPluginChanged(instanceID, pluginName, false, 1, sleep, timeout)
+	default:
+		return nil, fmt.Errorf("disable plugin failed, status: %v, message: %s",
+			response.StatusCode, failed)
+	}
 }
 
-// DeletePlugin deletes a plugin from an instance.
+// DeletePlugin: deletes a plugin from an instance.
 func (api *API) DeletePlugin(instanceID int, pluginName string, sleep, timeout int) error {
 	var (
 		failed map[string]interface{}
@@ -172,10 +160,38 @@ func (api *API) DeletePlugin(instanceID int, pluginName string, sleep, timeout i
 	if err != nil {
 		return err
 	}
-	if response.StatusCode != 204 {
-		return fmt.Errorf("DeletePlugin failed, status: %v, message: %s", response.StatusCode, failed)
-	}
 
-	_, err = api.waitUntilPluginChanged(instanceID, pluginName, false, sleep, timeout)
-	return err
+	switch response.StatusCode {
+	case 204:
+		_, err = api.waitUntilPluginChanged(instanceID, pluginName, false, 1, sleep, timeout)
+		return err
+	default:
+		return fmt.Errorf("delete plugin failed, status: %v, message: %s",
+			response.StatusCode, failed)
+	}
+}
+
+// waitUntilPluginChanged: wait until plugin changed.
+func (api *API) waitUntilPluginChanged(instanceID int, pluginName string, enabled bool,
+	attempt, sleep, timeout int) (map[string]interface{}, error) {
+
+	for {
+		time.Sleep(time.Duration(sleep) * time.Second)
+		if attempt*sleep > timeout {
+			return nil, fmt.Errorf("wait until plugin changed reached timeout of %d seconds", timeout)
+		}
+
+		response, err := api.ReadPlugin(instanceID, pluginName, sleep, timeout)
+		log.Printf("[DEBUG] go-api::plugin::waitUntilPluginChanged response: %v", response)
+		if err != nil {
+			return nil, err
+		}
+		if response["required"] != nil && response["required"] != false {
+			return response, nil
+		}
+		if response["enabled"] == enabled {
+			return response, nil
+		}
+		attempt++
+	}
 }
