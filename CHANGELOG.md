@@ -8,6 +8,8 @@ IMPROVEMENTS:
 
 * api/instance.go - Prepare to handle gone instance resource [#42](https://github.com/84codes/go-api/pull/42)
 * api/vpc.go - Handle gone VPC resource [#42](https://github.com/84codes/go-api/pull/42)
+* api/plugins.go - Make plugin retries configurable through input parameters [#40](https://github.com/84codes/go-api/pull/40)
+* api/plugins_community.go - Make plugin retries configurable through input parameters [#40](https://github.com/84codes/go-api/pull/40)
 
 ## 1.13.0 (Oct 27, 2023)
 
