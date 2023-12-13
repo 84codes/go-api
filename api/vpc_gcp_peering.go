@@ -7,6 +7,41 @@ import (
 	"time"
 )
 
+// waitForGcpPeeringStatus: waits for the VPC peering status to be ACTIVE or until timed out
+func (api *API) waitForGcpPeeringStatus(path, peerID string,
+	attempt, sleep, timeout int) error {
+
+	var (
+		data map[string]interface{}
+		err  error
+	)
+
+	for {
+		time.Sleep(time.Duration(sleep) * time.Second)
+		if attempt*sleep > timeout {
+			return fmt.Errorf("wait until GCP VPC peering status reached timeout of %d seconds", timeout)
+		}
+
+		attempt, data, err = api.readVpcGcpPeeringWithRetry(path, attempt, sleep, timeout)
+		if err != nil {
+			return err
+		}
+		rows := data["rows"].([]interface{})
+		if len(rows) > 0 {
+			for _, row := range rows {
+				tempRow := row.(map[string]interface{})
+				if tempRow["name"] != peerID {
+					continue
+				}
+				if tempRow["state"] == "ACTIVE" {
+					return nil
+				}
+			}
+		}
+		attempt++
+	}
+}
+
 // RequestVpcGcpPeering: requests a VPC peering from an instance.
 func (api *API) RequestVpcGcpPeering(instanceID int, params map[string]interface{},
 	waitOnStatus bool, sleep, timeout int) (map[string]interface{}, error) {
@@ -170,39 +205,4 @@ func (api *API) readVpcGcpInfoWithRetry(path string, attempt, sleep, timeout int
 	}
 	return nil, fmt.Errorf("read VPC info failed, status: %v, message: %s",
 		response.StatusCode, failed)
-}
-
-// waitForGcpPeeringStatus: waits for the VPC peering status to be ACTIVE or until timed out
-func (api *API) waitForGcpPeeringStatus(path, peerID string,
-	attempt, sleep, timeout int) error {
-
-	var (
-		data map[string]interface{}
-		err  error
-	)
-
-	for {
-		time.Sleep(time.Duration(sleep) * time.Second)
-		if attempt*sleep > timeout {
-			return fmt.Errorf("wait until GCP VPC peering status reached timeout of %d seconds", timeout)
-		}
-
-		attempt, data, err = api.readVpcGcpPeeringWithRetry(path, attempt, sleep, timeout)
-		if err != nil {
-			return err
-		}
-		rows := data["rows"].([]interface{})
-		if len(rows) > 0 {
-			for _, row := range rows {
-				tempRow := row.(map[string]interface{})
-				if tempRow["name"] != peerID {
-					continue
-				}
-				if tempRow["state"] == "ACTIVE" {
-					return nil
-				}
-			}
-		}
-		attempt++
-	}
 }
