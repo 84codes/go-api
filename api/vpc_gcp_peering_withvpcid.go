@@ -19,7 +19,10 @@ func (api *API) RequestVpcGcpPeeringWithVpcId(vpcID string, params map[string]in
 
 	if waitOnStatus {
 		log.Printf("[DEBUG] go-api::vpc_gcp_peering_withvpcid::request waiting for active state")
-		api.waitForGcpPeeringStatus(vpcID, data["peering"].(string), attempt, sleep, timeout)
+		err = api.waitForGcpPeeringStatus(path, data["peering"].(string), attempt, sleep, timeout)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return data, nil
