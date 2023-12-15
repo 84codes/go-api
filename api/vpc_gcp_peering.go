@@ -26,6 +26,7 @@ func (api *API) waitForGcpPeeringStatus(path, peerID string,
 		if err != nil {
 			return err
 		}
+
 		rows := data["rows"].([]interface{})
 		if len(rows) > 0 {
 			for _, row := range rows {
@@ -38,6 +39,8 @@ func (api *API) waitForGcpPeeringStatus(path, peerID string,
 				}
 			}
 		}
+		log.Printf("[INFO] go-api::vpc_gcp_peering::waitForGcpPeeringStatus Waiting for state = ACTIVE "+
+			"attempt %d until timeout: %d", attempt, (timeout - (attempt * sleep)))
 		attempt++
 	}
 }
@@ -54,7 +57,7 @@ func (api *API) RequestVpcGcpPeering(instanceID int, params map[string]interface
 
 	if waitOnStatus {
 		log.Printf("[DEBUG] go-api::vpc_gcp_peering_withvpcid::request waiting for active state")
-		err := api.waitForGcpPeeringStatus(path, data["peering"].(string), attempt, sleep, timeout)
+		err = api.waitForGcpPeeringStatus(path, data["peering"].(string), attempt, sleep, timeout)
 		if err != nil {
 			return nil, err
 		}
