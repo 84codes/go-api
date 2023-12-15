@@ -10,7 +10,9 @@ import (
 // EnablePrivatelink: Enable PrivateLink and wait until finished.
 // Need to enable VPC for an instance, if no standalone VPC used.
 // Wait until finished with configureable sleep and timeout.
-func (api *API) EnablePrivatelink(instanceID int, params map[string][]interface{}, sleep, timeout int) error {
+func (api *API) EnablePrivatelink(instanceID int, params map[string][]interface{},
+	sleep, timeout int) error {
+
 	var (
 		failed map[string]interface{}
 		path   = fmt.Sprintf("/api/instances/%d/privatelink", instanceID)
@@ -25,9 +27,10 @@ func (api *API) EnablePrivatelink(instanceID int, params map[string][]interface{
 		return err
 	}
 
-	if response.StatusCode == 204 {
+	switch response.StatusCode {
+	case 204:
 		return api.waitForEnablePrivatelinkWithRetry(instanceID, 1, sleep, timeout)
-	} else {
+	default:
 		return fmt.Errorf("enable PrivateLink failed, status: %v, message: %s",
 			response.StatusCode, failed)
 	}
@@ -83,9 +86,10 @@ func (api *API) UpdatePrivatelink(instanceID int, params map[string][]interface{
 		return err
 	}
 
-	if response.StatusCode == 204 {
+	switch response.StatusCode {
+	case 204:
 		return nil
-	} else {
+	default:
 		return fmt.Errorf("update Privatelink failed, status: %v, message: %s",
 			response.StatusCode, failed)
 	}
@@ -103,9 +107,10 @@ func (api *API) DisablePrivatelink(instanceID int) error {
 		return err
 	}
 
-	if response.StatusCode == 204 {
+	switch response.StatusCode {
+	case 204:
 		return nil
-	} else {
+	default:
 		return fmt.Errorf("disable Privatelink failed, status: %v, message: %s",
 			response.StatusCode, failed)
 	}
