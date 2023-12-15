@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -33,7 +34,13 @@ func (api *API) EnablePrivatelink(instanceID int, params map[string][]interface{
 }
 
 // ReadPrivatelink: Reads PrivateLink information
-func (api *API) ReadPrivatelink(instanceID int) (map[string]interface{}, error) {
+func (api *API) ReadPrivatelink(instanceID, sleep, timeout int) (map[string]interface{}, error) {
+	return api.readPrivateLinkWithRetry(instanceID, 1, sleep, timeout)
+}
+
+func (api *API) readPrivateLinkWithRetry(instanceID, attempt, sleep, timeout int) (
+	map[string]interface{}, error) {
+
 	var (
 		data   map[string]interface{}
 		failed map[string]interface{}
@@ -43,14 +50,25 @@ func (api *API) ReadPrivatelink(instanceID int) (map[string]interface{}, error) 
 	response, err := api.sling.New().Get(path).Receive(&data, &failed)
 	if err != nil {
 		return nil, err
+	} else if attempt*sleep > timeout {
+		return nil, fmt.Errorf("read PrivateLink failed, reached timeout of %d seconds", timeout)
 	}
 
-	if response.StatusCode == 200 {
+	switch response.StatusCode {
+	case 200:
 		return data, nil
-	} else {
-		return nil, fmt.Errorf("read PrivateLink failed, status: %v, message: %s",
-			response.StatusCode, failed)
+	case 400:
+		if strings.Compare(failed["error"].(string), "Timeout talking to backend") == 0 {
+			log.Printf("[INFO] go-api::privatelink::read Timeout talking to backend "+
+				"attempt: %d, until timeout: %d", attempt, (timeout - (attempt * sleep)))
+			attempt++
+			time.Sleep(time.Duration(sleep) * time.Second)
+			return api.readPrivateLinkWithRetry(instanceID, attempt, sleep, timeout)
+		}
 	}
+
+	return nil, fmt.Errorf("read PrivateLink failed, status: %v, message: %s",
+		response.StatusCode, failed)
 }
 
 // UpdatePrivatelink: Update allowed principals or subscriptions
