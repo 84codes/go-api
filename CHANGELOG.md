@@ -1,3 +1,11 @@
+## 1.15.0 (Unreleased)
+
+FEATURES:
+
+* api/vpc_gcp_peering.go - Add and update GCP VPC peering with retries [#43](https://github.com/84codes/go-api/pull/43)
+* api/vpc_gcp_peering.go - Add and update GCP VPC peering with retries [#43](https://github.com/84codes/go-api/pull/43)
+* api/privatelink.go - Add retry functionality to reading PrivateLink information [#44](https://github.com/84codes/go-api/pull/44)
+
 ## 1.14.0 (Dec 13, 2023)
 
 FEATURES:
