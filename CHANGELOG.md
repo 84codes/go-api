@@ -1,4 +1,4 @@
-## 1.15.0 (Unreleased)
+## 1.15.0 (Dec 18, 2023)
 
 FEATURES:
 
