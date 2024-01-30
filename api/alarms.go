@@ -9,6 +9,7 @@ import (
 )
 
 func (api *API) CreateAlarm(instanceID int, params map[string]interface{}) (map[string]interface{}, error) {
+
 	data := make(map[string]interface{})
 	failed := make(map[string]interface{})
 	log.Printf("[DEBUG] go-api::alarm::create instance ID: %v, params: %v", instanceID, params)
