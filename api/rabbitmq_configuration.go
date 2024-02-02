@@ -46,7 +46,8 @@ func (api *API) readRabbitMqConfigurationWithRetry(instanceID, attempt, sleep, t
 			return api.readRabbitMqConfigurationWithRetry(instanceID, attempt, sleep, timeout)
 		}
 	}
-	return nil, fmt.Errorf("read RabbitMQ configuration failed, status: %v, message: %s", response.StatusCode, failed)
+	return nil, fmt.Errorf("read RabbitMQ configuration failed, status: %d, message: %s",
+		response.StatusCode, failed)
 }
 
 func (api *API) UpdateRabbitMqConfiguration(instanceID int, params map[string]interface{},
@@ -91,7 +92,8 @@ func (api *API) updateRabbitMqConfigurationWithRetry(instanceID int, params map[
 			break
 		}
 	}
-	return fmt.Errorf("update RabbitMQ configuration failed, status: %v, message: %s", response.StatusCode, failed)
+	return fmt.Errorf("update RabbitMQ configuration failed, status: %d, message: %s",
+		response.StatusCode, failed)
 }
 
 func (api *API) DeleteRabbitMqConfiguration() error {

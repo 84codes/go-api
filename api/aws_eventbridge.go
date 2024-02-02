@@ -13,20 +13,20 @@ func (api *API) CreateAwsEventBridge(instanceID int, params map[string]interface
 		path   = fmt.Sprintf("/api/instances/%d/eventbridges", instanceID)
 	)
 
-	log.Printf("[DEBUG] go-api::aws-eventbridge::create instance ID: %d, params: %v", instanceID, params)
+	log.Printf("[DEBUG] go-api::aws-eventbridge::create path: %s", path)
 	response, err := api.sling.New().Post(path).BodyJSON(params).Receive(&data, &failed)
 	if err != nil {
 		return nil, err
 	}
 	if response.StatusCode != 201 {
-		return nil, fmt.Errorf("failed to create AWS EventBridge, status: %v, message: %s",
+		return nil, fmt.Errorf("failed to create AWS EventBridge, status: %d, message: %s",
 			response.StatusCode, failed)
 	}
 	if id, ok := data["id"]; ok {
 		data["id"] = strconv.FormatFloat(id.(float64), 'f', 0, 64)
-		log.Printf("[DEBUG] go-api::aws-eventbridge::create EventBridge identifier: %v", data["id"])
+		log.Printf("[DEBUG] go-api::aws-eventbridge::create EventBridge identifier: %s", data["id"])
 	} else {
-		return nil, fmt.Errorf("go-api::aws-eventbridge::create Invalid identifier: %v", data["id"])
+		return nil, fmt.Errorf("go-api::aws-eventbridge::create Invalid identifier: %s", data["id"])
 	}
 
 	return data, nil
@@ -44,7 +44,7 @@ func (api *API) ReadAwsEventBridge(instanceID int, eventbridgeID string) (map[st
 		return nil, err
 	}
 	if response.StatusCode != 200 {
-		return nil, fmt.Errorf("failed to read AWS EventBridge, status: %v, message: %s",
+		return nil, fmt.Errorf("failed to read AWS EventBridge, status: %d, message: %s",
 			response.StatusCode, failed)
 	}
 
@@ -63,7 +63,7 @@ func (api *API) ReadAwsEventBridges(instanceID int) (map[string]interface{}, err
 		return nil, err
 	}
 	if response.StatusCode != 200 {
-		return nil, fmt.Errorf("failed to read AWS EventBridges, status: %v, message: %s",
+		return nil, fmt.Errorf("failed to read AWS EventBridges, status: %d, message: %s",
 			response.StatusCode, failed)
 	}
 
@@ -76,7 +76,7 @@ func (api *API) DeleteAwsEventBridge(instanceID int, eventbridgeID string) error
 		path   = fmt.Sprintf("/api/instances/%d/eventbridges/%s", instanceID, eventbridgeID)
 	)
 
-	log.Printf("[DEBUG] go-api::aws-eventbridge::delete instance id: %d, eventbridge id: %s", instanceID, eventbridgeID)
+	log.Printf("[DEBUG] go-api::aws-eventbridge::delete path: %s", path)
 	response, err := api.sling.New().Delete(path).Receive(nil, &failed)
 	if err != nil {
 		return err
@@ -90,5 +90,6 @@ func (api *API) DeleteAwsEventBridge(instanceID int, eventbridgeID string) error
 		return nil
 	}
 
-	return fmt.Errorf("failed to delete AWS EventBridge, status: %v, message: %s", response.StatusCode, failed)
+	return fmt.Errorf("failed to delete AWS EventBridge, status: %d, message: %s",
+		response.StatusCode, failed)
 }

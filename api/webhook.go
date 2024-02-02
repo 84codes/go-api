@@ -19,7 +19,8 @@ func (api *API) CreateWebhook(instanceID int, params map[string]interface{}) (ma
 		return nil, err
 	}
 	if response.StatusCode != 201 {
-		return nil, fmt.Errorf(fmt.Sprintf("CreateWebhook failed, status: %v, message: %s", response.StatusCode, failed))
+		return nil, fmt.Errorf(fmt.Sprintf("CreateWebhook failed, status: %v, message: %s",
+			response.StatusCode, failed))
 	}
 
 	if v, ok := data["id"]; ok {
@@ -45,7 +46,8 @@ func (api *API) ReadWebhook(instanceID int, webhookID string) (map[string]interf
 		return nil, err
 	}
 	if response.StatusCode != 200 {
-		return nil, fmt.Errorf("ReadWebhook failed, status: %v, message: %s", response.StatusCode, failed)
+		return nil, fmt.Errorf("ReadWebhook failed, status: %d, message: %s",
+			response.StatusCode, failed)
 	}
 
 	return data, err
@@ -63,7 +65,8 @@ func (api *API) ReadWebhooks(instanceID int) (map[string]interface{}, error) {
 		return nil, err
 	}
 	if response.StatusCode != 200 {
-		return nil, fmt.Errorf("ReadWebhooks failed, status: %v, message: %s", response.StatusCode, failed)
+		return nil, fmt.Errorf("ReadWebhooks failed, status: %d, message: %s",
+			response.StatusCode, failed)
 	}
 
 	return data, err
@@ -77,7 +80,8 @@ func (api *API) DeleteWebhook(instanceID int, webhookID string) error {
 	response, err := api.sling.New().Delete(path).Receive(nil, &failed)
 
 	if response.StatusCode != 204 {
-		return fmt.Errorf("DeleteWebhook failed, status: %v, message: %s", response.StatusCode, failed)
+		return fmt.Errorf("DeleteWebhook failed, status: %d, message: %s",
+			response.StatusCode, failed)
 	}
 
 	return err

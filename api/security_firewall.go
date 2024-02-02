@@ -25,9 +25,11 @@ func (api *API) waitUntilFirewallConfigured(instanceID, attempt, sleep, timeout 
 		case 200:
 			return nil
 		case 400:
-			log.Printf("[DEBUG] go-api::security_firewall#waitUntilFirewallConfigured: The cluster is unavailable, firewall configuring")
+			log.Printf("[DEBUG] go-api::security_firewall#waitUntilFirewallConfigured: The cluster is " +
+				"unavailable, firewall configuring")
 		default:
-			return fmt.Errorf("waitUntilReady failed, status: %v, message: %s", response.StatusCode, failed)
+			return fmt.Errorf("waitUntilReady failed, status: %d, message: %s",
+				response.StatusCode, failed)
 		}
 
 		log.Printf("[INFO] go-api::security_firewall::waitUntilFirewallConfigured The cluster is unavailable, "+
@@ -56,7 +58,7 @@ func (api *API) createFirewallSettingsWithRetry(instanceID int, params []map[str
 		failed map[string]interface{}
 		path   = fmt.Sprintf("/api/instances/%d/security/firewall", instanceID)
 	)
-	log.Printf("[DEBUG] go-api::security_firewall::create instance ID: %v, params: %v", instanceID, params)
+	log.Printf("[DEBUG] go-api::security_firewall::create path: %s, params: %v", path, params)
 	response, err := api.sling.New().Post(path).BodyJSON(params).Receive(nil, &failed)
 
 	if err != nil {
@@ -82,7 +84,8 @@ func (api *API) createFirewallSettingsWithRetry(instanceID int, params []map[str
 			return attempt, fmt.Errorf("firewall rules validation failed due to: %s", failed["error"].(string))
 		}
 	}
-	return attempt, fmt.Errorf("create new firewall rules failed, status: %v, message: %s", response.StatusCode, failed)
+	return attempt, fmt.Errorf("create new firewall rules failed, status: %d, message: %s",
+		response.StatusCode, failed)
 }
 
 func (api *API) ReadFirewallSettings(instanceID int) ([]map[string]interface{}, error) {
