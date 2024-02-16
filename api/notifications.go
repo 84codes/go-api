@@ -1,7 +1,6 @@
 package api
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -28,11 +27,8 @@ func (api *API) CreateNotification(instanceID int, params map[string]interface{}
 
 	if v, ok := data["id"]; ok {
 		data["id"] = strconv.FormatFloat(v.(float64), 'f', 0, 64)
-		log.Printf("[DEBUG] go-api::notification::create id set: %v", data["id"])
 	} else {
-		msg := fmt.Sprintf("go-api::notification::create Invalid notification identifier: %v", data["id"])
-		log.Printf("[ERROR] %s", msg)
-		return nil, errors.New(msg)
+		return nil, fmt.Errorf("create notification invalid identifier: %v", data["id"])
 	}
 
 	return data, err
@@ -75,21 +71,20 @@ func (api *API) ReadNotifications(instanceID int) ([]map[string]interface{}, err
 		return nil, err
 	}
 	if response.StatusCode != 200 {
-		return nil, fmt.Errorf("read notifications failed, status: %d, message: %s",
+		return nil, fmt.Errorf("read notification failed, status: %d, message: %s",
 			response.StatusCode, failed)
 	}
 
 	return data, err
 }
 
-func (api *API) UpdateNotification(instanceID int, params map[string]interface{}) error {
+func (api *API) UpdateNotification(instanceID int, recipientID string, params map[string]interface{}) error {
 	var (
 		failed map[string]interface{}
-		path   = fmt.Sprintf("/api/instances/%d/alarms/recipients/%s", instanceID, params["id"])
+		path   = fmt.Sprintf("/api/instances/%d/alarms/recipients/%s", instanceID, recipientID)
 	)
 
-	log.Printf("[DEBUG] go-api::notification::update path: %s, params: %v", path, params)
-
+	log.Printf("[DEBUG] go-api::notification::update path: %s", path)
 	response, err := api.sling.New().Put(path).BodyJSON(params).Receive(nil, &failed)
 
 	if response.StatusCode != 200 {
@@ -100,14 +95,14 @@ func (api *API) UpdateNotification(instanceID int, params map[string]interface{}
 	return err
 }
 
-func (api *API) DeleteNotification(instanceID int, params map[string]interface{}) error {
+func (api *API) DeleteNotification(instanceID int, recipientID string) error {
 	var (
 		failed map[string]interface{}
-		path   = fmt.Sprintf("/api/instances/%d/alarms/recipients/%s", instanceID, params["id"])
+		path   = fmt.Sprintf("/api/instances/%d/alarms/recipients/%s", instanceID, recipientID)
 	)
 
-	log.Printf("[DEBUG] go-api::notification::delete path: %s, params: %v", path, params)
-	response, err := api.sling.New().Delete(path).BodyJSON(params).Receive(nil, &failed)
+	log.Printf("[DEBUG] go-api::notification::delete path: %s", path)
+	response, err := api.sling.New().Delete(path).Receive(nil, &failed)
 
 	if response.StatusCode != 204 {
 		return fmt.Errorf("delete notification failed, status: %d, message: %s",
