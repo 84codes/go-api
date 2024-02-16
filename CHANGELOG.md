@@ -1,3 +1,9 @@
+## 1.15.1 (Feb 15, 2024)
+
+IMPROVEMENTS:
+
+* api/notification.go - Update notification to use recipient ID parameter [#45](https://github.com/84codes/go-api/pull/45)
+
 ## 1.15.0 (Dec 18, 2023)
 
 FEATURES:
