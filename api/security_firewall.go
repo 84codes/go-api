@@ -38,16 +38,12 @@ func (api *API) waitUntilFirewallConfigured(instanceID, attempt, sleep, timeout 
 }
 
 func (api *API) CreateFirewallSettings(instanceID int, params []map[string]interface{}, sleep,
-	timeout int) ([]map[string]interface{}, error) {
+	timeout int) error {
 	attempt, err := api.createFirewallSettingsWithRetry(instanceID, params, 1, sleep, timeout)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	err = api.waitUntilFirewallConfigured(instanceID, attempt, sleep, timeout)
-	if err != nil {
-		return nil, err
-	}
-	return api.ReadFirewallSettings(instanceID)
+	return api.waitUntilFirewallConfigured(instanceID, attempt, sleep, timeout)
 }
 
 func (api *API) createFirewallSettingsWithRetry(instanceID int, params []map[string]interface{},
@@ -104,19 +100,31 @@ func (api *API) ReadFirewallSettings(instanceID int) ([]map[string]interface{}, 
 	return nil, fmt.Errorf("ReadFirewallSettings failed, status: %v, message: %s", response.StatusCode, failed)
 }
 
+func (api *API) ReadFirewallRule(instanceID int, ip string) (map[string]interface{}, error) {
+	data, err := api.ReadFirewallSettings(instanceID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, rule := range data {
+		for k, v := range rule {
+			if k == "ip" && v == ip {
+				return rule, nil
+			}
+		}
+	}
+	return nil, fmt.Errorf("ReadFirewallRule rule with CIDR: %s not found", ip)
+}
+
 func (api *API) UpdateFirewallSettings(instanceID int, params []map[string]interface{},
-	sleep, timeout int) ([]map[string]interface{}, error) {
+	sleep, timeout int) error {
 	log.Printf("[DEBUG] go-api::security_firewall::update instance id: %v, params: %v, sleep: %d, timeout: %d",
 		instanceID, params, sleep, timeout)
 	attempt, err := api.updateFirewallSettingsWithRetry(instanceID, params, 1, sleep, timeout)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	err = api.waitUntilFirewallConfigured(instanceID, attempt, sleep, timeout)
-	if err != nil {
-		return nil, err
-	}
-	return api.ReadFirewallSettings(instanceID)
+	return api.waitUntilFirewallConfigured(instanceID, attempt, sleep, timeout)
 }
 
 func (api *API) updateFirewallSettingsWithRetry(instanceID int, params []map[string]interface{},
@@ -215,4 +223,52 @@ func DefaultFirewallSettings() map[string]interface{} {
 		"description": "Default",
 	}
 	return defaultRule
+}
+
+func (api *API) PatchFirewallSettings(instanceID int, params []map[string]interface{},
+	sleep, timeout int) error {
+	attempt, err := api.patchFirewallSettingsWithRetry(instanceID, params, 1, sleep, timeout)
+	if err != nil {
+		return err
+	}
+	err = api.waitUntilFirewallConfigured(instanceID, attempt, sleep, timeout)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (api *API) patchFirewallSettingsWithRetry(instanceID int, params []map[string]interface{},
+	attempt, sleep, timeout int) (int, error) {
+	var (
+		failed map[string]interface{}
+		path   = fmt.Sprintf("/api/instances/%d/security/firewall", instanceID)
+	)
+	log.Printf("[DEBUG] go-api::security_firewall::patch instance ID: %v, params: %v", instanceID, params)
+	response, err := api.sling.New().Patch(path).BodyJSON(params).Receive(nil, &failed)
+
+	if err != nil {
+		return attempt, err
+	} else if attempt*sleep > timeout {
+		return attempt, fmt.Errorf("Create firewall settings failed, reached timeout of %d seconds", timeout)
+	}
+
+	switch {
+	case response.StatusCode == 201:
+		return attempt, nil
+	case response.StatusCode == 400:
+		switch {
+		case failed["error_code"] == nil:
+			break
+		case failed["error_code"].(float64) == 40001:
+			log.Printf("[INFO] go-api::security_firewall::patch Firewall not finished configuring "+
+				"attempt: %d, until timeout: %d", attempt, (timeout - (attempt * sleep)))
+			attempt++
+			time.Sleep(time.Duration(sleep) * time.Second)
+			return api.patchFirewallSettingsWithRetry(instanceID, params, attempt, sleep, timeout)
+		case failed["error_code"].(float64) == 40002:
+			return attempt, fmt.Errorf("Firewall rules validation failed due to: %s", failed["error"].(string))
+		}
+	}
+	return attempt, fmt.Errorf("Patch firewall rules failed, status: %v, message: %s", response.StatusCode, failed)
 }
