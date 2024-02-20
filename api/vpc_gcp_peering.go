@@ -17,7 +17,6 @@ func (api *API) waitForGcpPeeringStatus(path, peerID string,
 	)
 
 	for {
-		time.Sleep(time.Duration(sleep) * time.Second)
 		if attempt*sleep > timeout {
 			return fmt.Errorf("wait until GCP VPC peering status reached timeout of %d seconds", timeout)
 		}
@@ -42,6 +41,7 @@ func (api *API) waitForGcpPeeringStatus(path, peerID string,
 		log.Printf("[INFO] go-api::vpc_gcp_peering::waitForGcpPeeringStatus Waiting for state = ACTIVE "+
 			"attempt %d until timeout: %d", attempt, (timeout - (attempt * sleep)))
 		attempt++
+		time.Sleep(time.Duration(sleep) * time.Second)
 	}
 }
 
