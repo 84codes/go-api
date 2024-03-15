@@ -7,6 +7,9 @@ NOTES:
 FEATURES:
 
 * api/api.go - Make HTTP client accessable [#48](https://github.com/84codes/go-api/pull/48)
+
+IMPROVEMENTS:
+
 * multiple files - When polling, change sleep to after an attempt have been triggered [#48](https://github.com/84codes/go-api/pull/48)
 
 ## 1.15.1 (Feb 15, 2024)
