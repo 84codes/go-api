@@ -9,5 +9,5 @@ func main() {
 }
 
 func New(baseUrl, apiKey string) *api.API {
-	return api.New(baseUrl, apiKey, "84codes go-api")
+	return api.New(baseUrl, apiKey, "84codes go-api", nil)
 }
