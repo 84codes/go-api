@@ -47,7 +47,7 @@ func (api *API) createWebhookWithRetry(instanceID int, params map[string]interfa
 		return data, nil
 	case 400:
 		if strings.Compare(failed["error"].(string), "Timeout talking to backend") == 0 {
-			log.Printf("[INFO] go-api::webhook#read Timeout talking to backend "+
+			log.Printf("[INFO] go-api::webhook#create Timeout talking to backend "+
 				"attempt: %d, until timeout: %d", attempt, (timeout - (attempt * sleep)))
 			attempt++
 			time.Sleep(time.Duration(sleep) * time.Second)
@@ -103,6 +103,51 @@ func (api *API) ListWebhooks(instanceID int) (map[string]interface{}, error) {
 	}
 
 	return data, err
+}
+
+// UpdateWebhook - updates a specific webhook for an instance
+func (api *API) UpdateWebhook(instanceID int, webhookID string, params map[string]interface{},
+	sleep, timeout int) error {
+
+	path := fmt.Sprintf("/api/instances/%d/webhooks/%s", instanceID, webhookID)
+	return api.updateWebhookWithRetry(path, params, 1, sleep, timeout)
+}
+
+// updateWebhookWithRetry: update webhook with retry if backend is busy.
+func (api *API) updateWebhookWithRetry(path string, params map[string]interface{},
+	attempt, sleep, timeout int) error {
+
+	var (
+		data   = make(map[string]interface{})
+		failed map[string]interface{}
+	)
+
+	log.Printf("[DEBUG] go-api::webhook#update path: %s, params: %v", path, params)
+	response, err := api.sling.New().Put(path).BodyJSON(params).Receive(&data, &failed)
+	log.Printf("[DEBUG] go-api::webhook#update response data: %v", data)
+
+	if err != nil {
+		return err
+	} else if attempt*sleep > timeout {
+		return fmt.Errorf("update webhook reached timeout of %d seconds", timeout)
+	}
+
+	switch response.StatusCode {
+	case 201:
+		return nil
+	case 400:
+		if strings.Compare(failed["error"].(string), "Timeout talking to backend") == 0 {
+			log.Printf("[INFO] go-api::webhook#update Timeout talking to backend "+
+				"attempt: %d, until timeout: %d", attempt, (timeout - (attempt * sleep)))
+			attempt++
+			time.Sleep(time.Duration(sleep) * time.Second)
+			return api.updateWebhookWithRetry(path, params, attempt, sleep, timeout)
+		}
+		return fmt.Errorf("update webhook failed, status: %v, message: %s", 400, failed)
+	default:
+		return fmt.Errorf("update webhook with retry failed, status: %v, message: %s",
+			response.StatusCode, failed)
+	}
 }
 
 // DeleteWebhook - removes a specific webhook for an instance
