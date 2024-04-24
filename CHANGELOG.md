@@ -1,3 +1,9 @@
+## 1.16.1 (Apr 24, 2024)
+
+IMPROVEMENTS:
+
+* api/metadata.go - Revert setting the client for each sling request in metadata
+
 ## 1.16.0 (Mar 15, 2024)
 
 NOTES:
