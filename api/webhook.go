@@ -62,25 +62,48 @@ func (api *API) createWebhookWithRetry(instanceID int, params map[string]interfa
 }
 
 // ReadWebhook - retrieves a specific webhook for an instance
-func (api *API) ReadWebhook(instanceID int, webhookID string) (map[string]interface{}, error) {
+func (api *API) ReadWebhook(instanceID int, webhookID string, sleep, timeout int) (
+	map[string]interface{}, error) {
+
+	path := fmt.Sprintf("/api/instances/%d/webhooks/%s", instanceID, webhookID)
+	return api.readWebhookWithRetry(path, 1, sleep, timeout)
+}
+
+// readWebhookWithRetry: read webhook with retry if backend is busy.
+func (api *API) readWebhookWithRetry(path string, attempt, sleep, timeout int) (
+	map[string]interface{}, error) {
+
 	var (
 		data   map[string]interface{}
 		failed map[string]interface{}
-		path   = fmt.Sprintf("/api/instances/%d/webhooks/%s", instanceID, webhookID)
 	)
 
 	log.Printf("[DEBUG] go-api::webhook#read path: %s", path)
-	response, err := api.sling.New().Path(path).Receive(&data, &failed)
+	response, err := api.sling.New().Get(path).Receive(&data, &failed)
+	log.Printf("[DEBUG] go-api::webhook#read response data: %v", data)
 
 	if err != nil {
 		return nil, err
-	}
-	if response.StatusCode != 200 {
-		return nil, fmt.Errorf("read webhook failed, status: %v, message: %s",
-			response.StatusCode, failed)
+	} else if attempt*sleep > timeout {
+		return nil, fmt.Errorf("read webhook reached timeout of %d seconds", timeout)
 	}
 
-	return data, err
+	switch response.StatusCode {
+	case 200:
+		return data, nil
+	case 400:
+		if strings.Compare(failed["error"].(string), "Timeout talking to backend") == 0 {
+			log.Printf("[INFO] go-api::webhook#read Timeout talking to backend "+
+				"attempt: %d, until timeout: %d", attempt, (timeout - (attempt * sleep)))
+			attempt++
+			time.Sleep(time.Duration(sleep) * time.Second)
+			return api.readWebhookWithRetry(path, attempt, sleep, timeout)
+		}
+		return nil, fmt.Errorf("read webhook failed, status: %v, message: %s", 400, failed)
+	default:
+		return nil, fmt.Errorf("read webhook with retry failed, status: %v, message: %s",
+			response.StatusCode, failed)
+	}
 }
 
 // ListWebhooks - list all webhooks for an instance.
@@ -151,18 +174,40 @@ func (api *API) updateWebhookWithRetry(path string, params map[string]interface{
 }
 
 // DeleteWebhook - removes a specific webhook for an instance
-func (api *API) DeleteWebhook(instanceID int, webhookID string) error {
+func (api *API) DeleteWebhook(instanceID int, webhookID string, sleep, timeout int) error {
+	path := fmt.Sprintf("/api/instances/%d/webhooks/%s", instanceID, webhookID)
+	return api.deleteWebhookWithRetry(path, 1, sleep, timeout)
+}
+
+// deleteWebhookWithRetry: delete webhook with retry if backend is busy.
+func (api *API) deleteWebhookWithRetry(path string, attempt, sleep, timeout int) error {
 	var (
 		failed map[string]interface{}
-		path   = fmt.Sprintf("/api/instances/%d/webhooks/%s", instanceID, webhookID)
 	)
 
 	log.Printf("[DEBUG] go-api::webhook#delete path: %s", path)
 	response, err := api.sling.New().Delete(path).Receive(nil, &failed)
 
-	if response.StatusCode != 204 {
-		return fmt.Errorf("delete webhook failed, status: %v, message: %s", response.StatusCode, failed)
+	if err != nil {
+		return err
+	} else if attempt*sleep > timeout {
+		return fmt.Errorf("delete webhook reached timeout of %d seconds", timeout)
 	}
 
-	return err
+	switch response.StatusCode {
+	case 204:
+		return nil
+	case 400:
+		if strings.Compare(failed["error"].(string), "Timeout talking to backend") == 0 {
+			log.Printf("[INFO] go-api::webhook#delete Timeout talking to backend "+
+				"attempt: %d, until timeout: %d", attempt, (timeout - (attempt * sleep)))
+			attempt++
+			time.Sleep(time.Duration(sleep) * time.Second)
+			return api.deleteWebhookWithRetry(path, attempt, sleep, timeout)
+		}
+		return fmt.Errorf("delete webhook failed, status: %v, message: %s", 400, failed)
+	default:
+		return fmt.Errorf("delete webhook with retry failed, status: %v, message: %s",
+			response.StatusCode, failed)
+	}
 }
