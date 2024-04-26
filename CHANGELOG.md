@@ -1,3 +1,10 @@
+## 1.16.2 (Apr 26, 2024)
+
+IMPROVEMENTS:
+
+* api/webhook.go - Add retry functionality for Webhook endpoints [#50](https://github.com/84codes/go-api/pull/50)
+* api/webhook.go - Add update endpoint for Webhook [#50](https://github.com/84codes/go-api/pull/50)
+
 ## 1.16.1 (Apr 24, 2024)
 
 IMPROVEMENTS:
